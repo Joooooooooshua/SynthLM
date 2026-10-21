@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-pixel: 'Press Start 2P', monospace;
+    --font-silkscreen: 'Silkscreen', monospace;
+    --font-vt323: 'VT323', monospace;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    --color-chassis: #120909;
+    --color-chassis-deep: #0a0505;
+    --color-bay: #1a0f0f;
+    --color-bay-border: #451a1a;
+    
+    --color-gold: #d4af37;
+    --color-gold-bright: #facc15;
+    --color-gold-dim: #856a1e;
+    
+    --color-red: #ef4444;
+    --color-red-dark: #7f1d1d;
+    --color-red-neon: #ff2a2a;
+  }
+
+  body {
+    background-color: var(--color-chassis-deep);
+    color: var(--color-gold-bright);
+    font-family: var(--font-mono);
+  }
+}
+
+/* Custom 8-bit font utilities */
+.font-pixel {
+  font-family: var(--font-pixel), monospace;
+}
+
+.font-silkscreen {
+  font-family: var(--font-silkscreen), monospace;
+}
+
+.font-vt323 {
+  font-family: var(--font-vt323), monospace;
+}
+
+/* 8-bit pixel border effects */
+.pixel-box {
+  background: var(--color-bay);
+  border: 2px solid var(--color-gold-dim);
+  box-shadow: 
+    inset -2px -2px 0px rgba(0, 0, 0, 0.6),
+    inset 2px 2px 0px rgba(250, 204, 21, 0.15),
+    0 4px 12px rgba(0, 0, 0, 0.8);
+}
+
+.pixel-box-header {
+  border-bottom: 2px solid var(--color-bay-border);
+  background: linear-gradient(90deg, #2b1111 0%, #170909 100%);
+}
+
+/* Pulsing AI Highlight for modified knobs */
+@keyframes ai-pulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(250, 204, 21, 0.8), inset 0 0 8px rgba(250, 204, 21, 0.4);
+    border-color: #fde047;
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.9), inset 0 0 12px rgba(239, 68, 68, 0.5);
+    border-color: #f87171;
+  }
+}
+
+.ai-highlight-ring {
+  animation: ai-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom retro scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #140909;
+}
+::-webkit-scrollbar-thumb {
+  background: #451a1a;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #d4af37;
+}

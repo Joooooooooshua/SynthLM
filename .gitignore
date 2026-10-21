@@ -1,0 +1,14 @@
+# Devpost Learn personal context
+/devpost/learner-profile.md
+
+# Local environment & credentials
+.env
+.env.*
+!.env.example
+
+# Dependencies & build outputs
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+
