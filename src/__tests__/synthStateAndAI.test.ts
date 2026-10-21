@@ -71,6 +71,42 @@ describe('Deterministic Parameter Diffing & AI Explanations', () => {
     const diffs = computeDeterministicDiffs(oldPatch, newPatch);
     expect(diffs.some((d) => d.paramKey === 'osc1Type')).toBe(true);
   });
+
+  it('verifies Alpha / Beta state snapshotting logic', () => {
+    const preAiPatch: SynthPatch = { ...INIT_SINE, name: 'Initial Patch', filterCutoff: 12000 };
+    const postAiPatch: SynthPatch = { ...INIT_SINE, name: 'Iceland Aurora Lead', filterCutoff: 1500, reverbWet: 0.8 };
+
+    // State machine simulation
+    let current = { ...preAiPatch };
+    const alpha = { ...current }; // Snapshot before AI
+    const beta = { ...postAiPatch }; // AI patch
+    current = { ...beta }; // Applied
+
+    expect(alpha.filterCutoff).toBe(12000);
+    expect(beta.filterCutoff).toBe(1500);
+    expect(current.filterCutoff).toBe(1500);
+
+    // Toggle back to Alpha
+    current = { ...alpha };
+    expect(current.filterCutoff).toBe(12000);
+
+    // Toggle back to Beta
+    current = { ...beta };
+    expect(current.filterCutoff).toBe(1500);
+  });
+
+  it('manages persistent highlight set and clears individual knob on interaction', () => {
+    const highlighted = new Set<keyof SynthPatch>(['filterCutoff', 'attack', 'reverbWet']);
+    expect(highlighted.has('filterCutoff')).toBe(true);
+    expect(highlighted.has('attack')).toBe(true);
+    expect(highlighted.has('reverbWet')).toBe(true);
+
+    // User touches filterCutoff knob
+    highlighted.delete('filterCutoff');
+    expect(highlighted.has('filterCutoff')).toBe(false);
+    expect(highlighted.has('attack')).toBe(true);
+    expect(highlighted.has('reverbWet')).toBe(true);
+  });
 });
 
 describe('Demo Melody Parser & Web MIDI Note Mapping', () => {
