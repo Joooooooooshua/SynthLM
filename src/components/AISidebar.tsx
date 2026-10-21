@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage, GeminiModelId, SynthPatch } from '../types/synth';
-import { Sparkles, Send, Bot, User, ArrowRight, Music, Lightbulb, AlertCircle } from 'lucide-react';
+import { Sparkles, Send, Bot, User, ArrowRight, Music, Lightbulb, AlertCircle, Trash2 } from 'lucide-react';
 
 interface AISidebarProps {
   chatMessages: ChatMessage[];
@@ -11,6 +11,7 @@ interface AISidebarProps {
   onModelChange: (model: GeminiModelId) => void;
   onSendMessage: (prompt: string) => void;
   onSelectPromptChip: (prompt: string) => void;
+  onClearHistory?: () => void;
   onKnobFlash?: (key: string) => void;
 }
 
@@ -29,6 +30,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   onModelChange,
   onSendMessage,
   onSelectPromptChip,
+  onClearHistory,
   onKnobFlash,
 }) => {
   const [inputText, setInputText] = useState('');
@@ -59,16 +61,27 @@ export const AISidebar: React.FC<AISidebarProps> = ({
           <span className="text-[10px] font-pixel text-yellow-300">AI SOUND DESIGNER</span>
         </div>
 
-        {/* Model Selector */}
-        <select
-          value={selectedModel}
-          onChange={(e) => onModelChange(e.target.value as GeminiModelId)}
-          className="bg-[#240c0c] text-yellow-300 text-[8px] font-pixel px-1.5 py-1 rounded border border-[#522222] focus:outline-none"
-        >
-          <option value="gemini-4-argon">⚡ 4 Argon (Deep Synesthetic)</option>
-          <option value="gemini-3.8-flash">⚡ 3.8 Flash (Fast Studio)</option>
-          <option value="gemini-3.5-flash-lite">🚀 3.5 Flash-Lite (Speed)</option>
-        </select>
+        {/* Model Selector & Clear History */}
+        <div className="flex items-center gap-1.5">
+          <select
+            value={selectedModel}
+            onChange={(e) => onModelChange(e.target.value as GeminiModelId)}
+            className="bg-[#240c0c] text-yellow-300 text-[8px] font-pixel px-1.5 py-1 rounded border border-[#522222] focus:outline-none"
+          >
+            <option value="gemini-4-argon">⚡ 4 Argon (Deep Synesthetic)</option>
+            <option value="gemini-3.8-flash">⚡ 3.8 Flash (Fast Studio)</option>
+            <option value="gemini-3.5-flash-lite">🚀 3.5 Flash-Lite (Speed)</option>
+          </select>
+          {onClearHistory && (
+            <button
+              onClick={onClearHistory}
+              className="text-yellow-600/70 hover:text-red-400 p-1 rounded hover:bg-[#2e1010] transition-colors"
+              title="Clear Local Chat History (清空对话记录)"
+            >
+              <Trash2 size={11} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Quick Suggestion Chips */}

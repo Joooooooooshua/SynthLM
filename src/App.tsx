@@ -152,6 +152,12 @@ export function App() {
     });
   }, []);
 
+  // Clear local AI chat history
+  const handleClearHistory = useCallback(() => {
+    setChatMessages([]);
+    localStorage.removeItem('synthlm_chat_history');
+  }, []);
+
   // Initialize MIDI on mount
   useEffect(() => {
     midiManager.init(
@@ -401,6 +407,7 @@ export function App() {
           onModelChange={setSelectedModel}
           onSendMessage={handleSendMessage}
           onSelectPromptChip={(prompt) => handleSendMessage(prompt)}
+          onClearHistory={handleClearHistory}
           onKnobFlash={(key) => handleClearHighlight(key)}
         />
       </div>
