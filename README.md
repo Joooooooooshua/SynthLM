@@ -79,3 +79,4 @@ Open `devpost/app-map.html` in any web browser to view the complete audio signal
 ## License
 
 [MIT](LICENSE) © 2026 SynthLM Contributors
+
