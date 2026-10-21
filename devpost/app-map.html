@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SynthLM — Application Architecture Map</title>
+  <style>
+    :root {
+      --bg: #0e0707;
+      --card-bg: #170a0a;
+      --border: #4d1d1d;
+      --gold: #facc15;
+      --gold-dim: #997b10;
+      --red: #ef4444;
+      --text: #fde047;
+      --text-dim: #c29f40;
+      --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      margin: 0;
+      padding: 24px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    header {
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    h1 {
+      color: var(--gold);
+      margin: 0 0 8px 0;
+      font-size: 24px;
+      letter-spacing: 1px;
+    }
+    h2 {
+      color: var(--red);
+      font-size: 16px;
+      border-left: 4px solid var(--gold);
+      padding-left: 8px;
+      margin-top: 24px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .route-stop {
+      border-left: 3px solid var(--gold-dim);
+      padding-left: 12px;
+      margin-bottom: 16px;
+    }
+    .badge {
+      display: inline-block;
+      background: #2b0f0f;
+      color: var(--gold);
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+    code {
+      background: #240c0c;
+      color: var(--gold);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 13px;
+    }
+    pre {
+      background: #080303;
+      border: 1px solid var(--border);
+      padding: 12px;
+      border-radius: 4px;
+      overflow-x: auto;
+      color: #ffd875;
+      font-size: 12px;
+    }
+    svg {
+      width: 100%;
+      height: auto;
+      background: #080303;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin: 12px 0;
+    }
+    .practice-box {
+      border: 2px solid var(--gold);
+      background: #1c0e0e;
+      padding: 16px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>SynthLM — Application Architecture Map</h1>
+      <p style="color: var(--text-dim); margin: 0;">
+        Interactive synthesis engine, synesthetic AI reasoning pipeline, and verified code tour.
+      </p>
+    </header>
+
+    <!-- Overview -->
+    <section class="card">
+      <h2>1. The Two Connected Halves of SynthLM</h2>
+      <p>
+        SynthLM bridges musical intuition with real-time audio code. It is structured into two cooperating halves:
+      </p>
+      <ul>
+        <li>
+          <strong>The Instrument (Web Audio Graph):</strong> A polyphonic, dual-oscillator subtractive synthesizer with filter, ADSR envelope, 4-chain effects rack (Drive, Chorus, Delay, Reverb), and a 60fps real-time oscilloscope visualizer.
+        </li>
+        <li>
+          <strong>The AI Copilot (Two-Stage Synesthetic Reasoner):</strong> Powered by Google's flagship models (<code>gemini-4-argon</code> / <code>gemini-3.8-flash</code>) via <code>@google/genai</code>, translating poetic and emotional sound descriptions into validated acoustic parameters with instant <code>Alpha / Beta</code> A-B comparison.
+        </li>
+      </ul>
+    </section>
+
+    <!-- Signal Flow Diagram -->
+    <section class="card">
+      <h2>2. Audio Signal Flow & State Architecture</h2>
+      <svg viewBox="0 0 800 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Input Layer -->
+        <rect x="20" y="20" width="140" height="40" rx="4" fill="#240e0e" stroke="#ef4444" stroke-width="2"/>
+        <text x="90" y="45" fill="#facc15" font-size="11" font-family="monospace" text-anchor="middle" font-weight="bold">MIDI / Keyboard / Loop</text>
+
+        <!-- Oscillators -->
+        <rect x="200" y="20" width="160" height="85" rx="4" fill="#1f0a0a" stroke="#d4af37" stroke-width="2"/>
+        <text x="280" y="45" fill="#facc15" font-size="11" font-family="monospace" text-anchor="middle" font-weight="bold">OSC 1 (Sine/Sqr/Tri/Saw)</text>
+        <text x="280" y="70" fill="#facc15" font-size="11" font-family="monospace" text-anchor="middle" font-weight="bold">OSC 2 (Detune + Octave)</text>
+        <text x="280" y="92" fill="#ef4444" font-size="9" font-family="monospace" text-anchor="middle">Mixer Gains</text>
+
+        <!-- Filter & ADSR -->
+        <rect x="400" y="20" width="160" height="85" rx="4" fill="#1f0a0a" stroke="#d4af37" stroke-width="2"/>
+        <text x="480" y="45" fill="#facc15" font-size="11" font-family="monospace" text-anchor="middle" font-weight="bold">Tone.Filter (-24dB)</text>
+        <text x="480" y="70" fill="#facc15" font-size="11" font-family="monospace" text-anchor="middle" font-weight="bold">ADSR Amplitude Env</text>
+        <text x="480" y="92" fill="#ef4444" font-size="9" font-family="monospace" text-anchor="middle">Cutoff 20-18k Hz | Reso Q</text>
+
+        <!-- FX Rack -->
+        <rect x="600" y="20" width="180" height="85" rx="4" fill="#1f0a0a" stroke="#d4af37" stroke-width="2"/>
+        <text x="690" y="40" fill="#facc15" font-size="10" font-family="monospace" text-anchor="middle" font-weight="bold">Distortion -> Chorus</text>
+        <text x="690" y="60" fill="#facc15" font-size="10" font-family="monospace" text-anchor="middle" font-weight="bold">-> Feedback Delay</text>
+        <text x="690" y="80" fill="#facc15" font-size="10" font-family="monospace" text-anchor="middle" font-weight="bold">-> Algorithmic Reverb</text>
+        <text x="690" y="95" fill="#ef4444" font-size="8" font-family="monospace" text-anchor="middle">Limiter -> Destination</text>
+
+        <!-- Analyser & Center Visualizer -->
+        <rect x="400" y="140" width="380" height="75" rx="4" fill="#120505" stroke="#ef4444" stroke-width="2"/>
+        <text x="590" y="165" fill="#facc15" font-size="11" font-family="monospace" text-anchor="middle" font-weight="bold">Tone.Analyser -> Center Canvas Visualizer (60 FPS)</text>
+        <text x="590" y="190" fill="#ef4444" font-size="10" font-family="monospace" text-anchor="middle">Golden-Yellow Oscilloscope Waveform + Crimson FFT Bars</text>
+
+        <!-- AI Sidebar Box -->
+        <rect x="20" y="140" width="340" height="75" rx="4" fill="#1a0c0c" stroke="#facc15" stroke-width="2"/>
+        <text x="190" y="165" fill="#facc15" font-size="11" font-family="monospace" text-anchor="middle" font-weight="bold">Gemini Sound Designer (gemini-4-argon)</text>
+        <text x="190" y="190" fill="#ffd875" font-size="9" font-family="monospace" text-anchor="middle">JSON Schema -> Alpha/Beta Toggle -> Persistent Highlights</text>
+
+        <!-- Connecting Arrows -->
+        <path d="M 160 40 L 200 40" stroke="#facc15" stroke-width="2" marker-end="url(#arrow)"/>
+        <path d="M 360 55 L 400 55" stroke="#facc15" stroke-width="2"/>
+        <path d="M 560 55 L 600 55" stroke="#facc15" stroke-width="2"/>
+        <path d="M 690 105 L 690 140" stroke="#ef4444" stroke-width="2"/>
+        <path d="M 190 140 L 190 120 L 480 120 L 480 105" stroke="#facc15" stroke-width="2" stroke-dasharray="4 4"/>
+      </svg>
+    </section>
+
+    <!-- Guided Code Tour: 3 Stops -->
+    <section class="card">
+      <h2>3. The 3-Stop Code Tour</h2>
+
+      <div class="route-stop">
+        <span class="badge">STOP 1</span> <strong>The Audio Signal Graph:</strong> <code>src/audio/synthEngine.ts</code>
+        <p>
+          Open <code>synthEngine.ts</code>. Notice lines 55–130 inside <code>init()</code>: each module is an instance of a Tone.js audio node connected via <code>.chain()</code> into a unified audio stream. Notice how <code>applyPatch()</code> uses <code>.rampTo()</code> for parameter updates to prevent audible clicks or pops when tweaking knobs or toggling A/B.
+        </p>
+      </div>
+
+      <div class="route-stop">
+        <span class="badge">STOP 2</span> <strong>The Two-Stage Synesthetic Reasoner:</strong> <code>src/services/geminiSoundDesigner.ts</code>
+        <p>
+          Open <code>geminiSoundDesigner.ts</code>. Look at <code>SYNTH_RESPONSE_JSON_SCHEMA</code> and <code>requestAISoundDesign()</code>. Notice how the model is instructed to first perform a 4-pillar acoustic breakdown (Timbre, Filter, Envelope, Space) before calculating the 21 numeric values. This is why it handles poetic metaphors like <em>"像冰岛冬天极光一样的孤独感音色"</em> with acoustic precision.
+        </p>
+      </div>
+
+      <div class="route-stop">
+        <span class="badge">STOP 3</span> <strong>The Central State & Highlight Lifecycle:</strong> <code>src/App.tsx</code>
+        <p>
+          Open <code>src/App.tsx</code>. Look at <code>handleSendMessage()</code>: before applying the AI's new sound, it automatically copies the current state into <code>alphaPatch</code>, sets the new sound into <code>betaPatch</code>, and marks changed keys in <code>highlightedParams</code>. Look at <code>handleClearHighlight()</code>: the moment you click or drag a highlighted knob on the synth rack, only that specific knob's halo clears.
+        </p>
+      </div>
+    </section>
+
+    <!-- To Change This, Start Here -->
+    <section class="card">
+      <h2>4. "To Change This, Start Here" Quick Pointers</h2>
+      <ul>
+        <li>
+          <strong>Custom Demo Loop Melody:</strong> Edit <code>src/audio/demoMelody.ts</code> (or click the Music icon in the top bar to paste your melody notes in the UI).
+        </li>
+        <li>
+          <strong>Adding New Preset Sounds:</strong> Add entries to <code>FOUNDATIONAL_PRESETS</code> in <code>src/audio/presets.ts</code>.
+        </li>
+        <li>
+          <strong>Fine-tuning AI Prompts:</strong> Modify <code>SYNTH_DESIGNER_SYSTEM_PROMPT</code> in <code>src/services/geminiSoundDesigner.ts</code>.
+        </li>
+        <li>
+          <strong>Adjusting Visual Theme:</strong> Palette variables and pixel styles live in <code>src/index.css</code>.
+        </li>
+      </ul>
+    </section>
+
+    <!-- A Practice to Reuse -->
+    <div class="practice-box">
+      <h2 style="margin-top: 0; color: var(--gold);">5. A Practice to Reuse: Schema-Constrained Domain Modeling</h2>
+      <p style="margin: 0; color: #fff;">
+        When building an AI assistant for a complex domain with strict physical boundaries (like audio DSP, financial ledgers, or 3D graphics), <strong>never let the LLM generate unconstrained text or arbitrary numbers</strong>.
+      </p>
+      <p style="margin: 8px 0 0 0; color: var(--text-dim);">
+        By defining a complete, validated TypeScript interface (<code>SynthPatch</code>), a strict JSON Schema (<code>SYNTH_RESPONSE_JSON_SCHEMA</code>) with the Gemini Interactions API, and a deterministic fallback clamper (<code>clampPatch</code>), you guarantee that the AI's creative intelligence produces safe, stable, zero-crash parameter updates every single turn.
+      </p>
+    </div>
+
+    <!-- How to Run -->
+    <section class="card" style="margin-top: 16px;">
+      <h2>6. How to Run & Verify</h2>
+      <pre><code>npm run dev</code></pre>
+      <p style="margin: 0; font-size: 13px;">
+        Open <code>http://localhost:5173</code> in Google Chrome. Test playing via computer keyboard, mouse, or Web MIDI controller, trigger the Demo Loop, and type in the AI sidebar to sculpt new sounds!
+      </p>
+    </section>
+  </div>
+</body>
+</html>

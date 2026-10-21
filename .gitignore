@@ -12,3 +12,9 @@ dist/
 *.tsbuildinfo
 .DS_Store
 
+# Agent skills tooling cache
+.agents/
+.claude/
+agent/
+skills-lock.json
+
