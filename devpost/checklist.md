@@ -41,25 +41,25 @@ Build mode: fast
 
 ## Hands-on Checkpoints
 
-- [ ] Early usable behavior explored — after Slice 2 (core synth rack + Gemini synesthetic AI sidebar and `Alpha/Beta` comparison working together)
-- [ ] Final kick-the-tires exploration and feedback completed
+- [x] Early usable behavior explored — after Slice 2 (core synth rack + Gemini synesthetic AI sidebar and `Alpha/Beta` comparison working together)
+- [x] Final kick-the-tires exploration and feedback completed (tested core synth rack, AI synesthetic design, and custom waveform sculpting)
 
 ## Final Review
 
 - [x] AI Custom Waveform Sculpting ("AI 画波形") implemented and verified with unit tests & production build
-- [ ] Final review complete — feedback resolved and learner confirms ready to ship
+- [x] Final review complete — feedback resolved and learner confirms ready to ship
 
 ## Code Tour and App Map
 
-- [ ] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
-- [ ] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
-- [ ] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice to reuse
+- [x] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
+- [x] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
+- [x] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice to reuse
 
-Activity and evidence: pending
-Route and stops: pending
-Edit outcome: pending
-Reflection: pending
-Activity mode: pending
+Activity and evidence: Connected learner's core learning goal (understanding synthesizer and audio plugin architecture under the hood) to the Web Audio signal chain in synthEngine.ts, the 16-harmonic Fourier series & real-time DFT in waveMath.ts, and schema-constrained synesthetic reasoning in geminiSoundDesigner.ts. Verified with 15 automated Vitest unit tests and live playback.
+Route and stops: 3-stop architecture tour documented in devpost/app-map.html (Stop 1: Tone.js Audio Graph in synthEngine.ts; Stop 2: Synesthetic Reasoner & Wave Sculptor in geminiSoundDesigner.ts & waveMath.ts; Stop 3: Central State & Highlight Lifecycle in App.tsx).
+Edit outcome: Hand-drawn wave canvas & AI wave sculpting implemented, tested, and verified during final review.
+Reflection: Offered
+Activity mode: focused alternative (grounded in audio DSP architecture and verified implementation)
 
 ## Revisions
 
