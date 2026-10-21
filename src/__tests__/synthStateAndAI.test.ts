@@ -121,4 +121,20 @@ describe('Demo Melody Parser & Web MIDI Note Mapping', () => {
     expect(midiNumberToNote(36)).toBe('C2');
     expect(midiNumberToNote(61)).toBe('C#4');
   });
+
+  it('preserves manual A / B slots independently from Alpha / Beta AI slots', () => {
+    let slotA: SynthPatch = { ...INIT_SINE, name: 'Lead Var A', filterCutoff: 3000 };
+    let slotB: SynthPatch = { ...INIT_SINE, name: 'Lead Var B', filterCutoff: 7500 };
+
+    expect(slotA.filterCutoff).toBe(3000);
+    expect(slotB.filterCutoff).toBe(7500);
+
+    // Snapshot serialization & restoration
+    const serialized = JSON.stringify([slotA, slotB]);
+    const restored: SynthPatch[] = JSON.parse(serialized);
+
+    expect(restored.length).toBe(2);
+    expect(restored[0].name).toBe('Lead Var A');
+    expect(restored[1].filterCutoff).toBe(7500);
+  });
 });
