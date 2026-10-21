@@ -9,7 +9,7 @@ Build mode: fast
 
 ## Slices
 
-- [ ] **1. Playable 8-bit synthesizer rack with dual oscillators, filter, ADSR, FX, and live center waveform visualizer**
+- [x] **1. Playable 8-bit synthesizer rack with dual oscillators, filter, ADSR, FX, and live center waveform visualizer**
   Becomes usable: A running synthesizer workstation in the 8-bit Red/Gold/Yellow hardware theme where selecting foundational presets (`Init Sine`, `Init Square`, `Init Triangle`, `Init Saw`), dragging any of the 20 rotary knobs across Dual Oscillators, Filter, Envelope (ADSR), and 4 FX (Distortion, Chorus, Delay, Reverb), and clicking piano keys produces real-time polyphonic audio and drives the central oscilloscope/spectrum visualizer.
   Why now: Bootstraps the Vite + React + TypeScript project, creates the MIT `LICENSE`, and proves the core `Tone.js` audio signal chain and visual workstation layout end to end on the first step.
   PRD ref: `prd.md > Screens and Layout`, `prd.md > Look and Feel`, `prd.md > 1. Real-Time Synthesizer Engine & Modular Controls`
@@ -19,7 +19,7 @@ Build mode: fast
   Learner check: Open `http://localhost:5173`, click several keys on the bottom piano keyboard, switch between `Init Sine` and `Init Saw`, drag the Filter Cutoff and Reverb knobs, and confirm you hear the sound change in real time and see the red/gold/yellow waveform moving in the center.
   Commit: `Add core Tone.js dual-oscillator synth rack and center waveform visualizer`
 
-- [ ] **2. Deep synesthetic AI Sound Designer sidebar, automatic Alpha/Beta comparison, and persistent knob highlights**
+- [x] **2. Deep synesthetic AI Sound Designer sidebar, automatic Alpha/Beta comparison, and persistent knob highlights**
   Becomes usable: Submitting a poetic/synesthetic or technical prompt in the right-hand AI Copilot sidebar (e.g., *"Give me a lonely sound like a winter aurora in Iceland"* or *"Make this bass fatter"*) calls `@google/genai` (`client.interactions.create` with `gemini-4-argon` default, `gemini-3.8-flash`, or `gemini-3.5-flash-lite`), snapshots the prior patch into `Alpha`, loads the new patch into `Beta`, highlights every modified knob in bright golden-yellow until the user touches that knob, and displays the 4-pillar synesthetic breakdown plus `Old → New` parameter explanation cards.
   Why now: Delivers `scope.md > The Unique Kernel` early and verifies the Gemini Interactions API structured JSON schema, parameter diff computation, and persistent highlight clearing logic.
   PRD ref: `prd.md > 3. Sidebar AI Sound Designer, Synesthetic Guidance & Persistent Highlights`, `prd.md > 4. Dual Version Comparison: AI Alpha / Beta & Manual A / B`, `prd.md > States and Boundaries`
@@ -29,7 +29,7 @@ Build mode: fast
   Learner check: Type a synesthetic prompt like *"给我捏一个像冰岛冬天极光一样的孤独感的音色"* in the right sidebar, watch the modified knobs light up in yellow/gold and read the acoustic explanations, toggle `Alpha / Beta` in the top bar to compare before and after, then click one highlighted knob to confirm its highlight clears.
   Commit: `Add Gemini synesthetic AI sound designer sidebar, Alpha/Beta toggle, and persistent knob highlights`
 
-- [ ] **3. Multi-input performance (Web MIDI, typing keyboard, custom Demo Loop) and manual A/B + preset snapshots**
+- [x] **3. Multi-input performance (Web MIDI, typing keyboard, custom Demo Loop) and manual A/B + preset snapshots**
   Becomes usable: The synthesizer can be played via external MIDI controllers or DAW virtual MIDI routing (`Web MIDI API`), computer typing keyboard (`A W S E D F...`), or the hands-free **Demo Loop** (with an inline custom melody note editor), and users can manually save/compare `A / B` slots, save named **Preset Snapshots** (with `.json` export and `localStorage` persistence), and get a browser confirmation prompt before refreshing with unsaved changes.
   Why now: Completes the full producer workflow so the synth can sit inside an existing DAW arrangement or play a custom melody loop hands-free while prompting the AI.
   PRD ref: `prd.md > The Core Journey`, `prd.md > 2. Multi-Input MIDI & Custom Demo Loop Triggering`, `prd.md > 4. Dual Version Comparison: AI Alpha / Beta & Manual A / B`
