@@ -3,6 +3,7 @@ import { SynthPatch, WaveformType, FilterType } from '../types/synth';
 import { PARAMETER_METAS } from '../audio/presets';
 import { RotaryKnob } from './RotaryKnob';
 import { WaveformVisualizer } from './WaveformVisualizer';
+import { WaveSculptorCanvas } from './WaveSculptorCanvas';
 
 interface SynthRackProps {
   patch: SynthPatch;
@@ -10,6 +11,7 @@ interface SynthRackProps {
   isPlaying?: boolean;
   onParamChange: (key: string, value: number) => void;
   onWaveformChange: (osc: 'osc1Type' | 'osc2Type', type: WaveformType) => void;
+  onPartialsChange: (osc: 'osc1Partials' | 'osc2Partials', partials: number[]) => void;
   onFilterTypeChange: (type: FilterType) => void;
   onClearHighlight: (key: string) => void;
 }
@@ -19,6 +21,7 @@ const WAVEFORMS: { type: WaveformType; label: string; icon: string }[] = [
   { type: 'square', label: 'SQR', icon: '⊓' },
   { type: 'triangle', label: 'TRI', icon: '∧' },
   { type: 'sawtooth', label: 'SAW', icon: '⩘' },
+  { type: 'custom', label: 'CST', icon: '✦' },
 ];
 
 const FILTERS: { type: FilterType; label: string }[] = [
@@ -33,6 +36,7 @@ export const SynthRack: React.FC<SynthRackProps> = ({
   isPlaying,
   onParamChange,
   onWaveformChange,
+  onPartialsChange,
   onFilterTypeChange,
   onClearHighlight,
 }) => {
@@ -42,7 +46,7 @@ export const SynthRack: React.FC<SynthRackProps> = ({
       <div className="pixel-box p-3 flex flex-col justify-between">
         <div className="pixel-box-header px-2 py-1 flex items-center justify-between mb-2">
           <span className="text-[10px] font-pixel text-red-400">OSC 1 & OSC 2</span>
-          <span className="text-[8px] font-silkscreen text-yellow-500/80">DUAL ENGINE</span>
+          <span className="text-[8px] font-silkscreen text-yellow-500/80">DUAL ENGINE & WAVE SCULPT</span>
         </div>
 
         {/* OSC 1 */}
@@ -67,6 +71,22 @@ export const SynthRack: React.FC<SynthRackProps> = ({
               ))}
             </div>
           </div>
+
+          {/* OSC 1 Single-Cycle Wave Canvas */}
+          <div className="mb-2">
+            <WaveSculptorCanvas
+              oscLabel="OSC 1"
+              waveformType={patch.osc1Type}
+              partials={patch.osc1Partials}
+              isHighlighted={highlightedParams.has('osc1Partials') || highlightedParams.has('osc1Type')}
+              onPartialsChange={(newPartials) => onPartialsChange('osc1Partials', newPartials)}
+              onInteract={() => {
+                onClearHighlight('osc1Partials');
+                onClearHighlight('osc1Type');
+              }}
+            />
+          </div>
+
           <div className="flex justify-around">
             <RotaryKnob
               meta={PARAMETER_METAS.osc1Octave}
@@ -114,6 +134,22 @@ export const SynthRack: React.FC<SynthRackProps> = ({
               ))}
             </div>
           </div>
+
+          {/* OSC 2 Single-Cycle Wave Canvas */}
+          <div className="mb-2">
+            <WaveSculptorCanvas
+              oscLabel="OSC 2"
+              waveformType={patch.osc2Type}
+              partials={patch.osc2Partials}
+              isHighlighted={highlightedParams.has('osc2Partials') || highlightedParams.has('osc2Type')}
+              onPartialsChange={(newPartials) => onPartialsChange('osc2Partials', newPartials)}
+              onInteract={() => {
+                onClearHighlight('osc2Partials');
+                onClearHighlight('osc2Type');
+              }}
+            />
+          </div>
+
           <div className="flex justify-around">
             <RotaryKnob
               meta={PARAMETER_METAS.osc2Octave}

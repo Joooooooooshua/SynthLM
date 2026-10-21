@@ -102,10 +102,11 @@ Implements `prd.md > 1. Real-Time Synthesizer Engine & Modular Controls`.
 - Encapsulates a dual-oscillator `Tone.PolySynth` architecture (two synchronized polyphonic synth layers `osc1` and `osc2` mixed into a shared `Tone.Filter` → `Tone.Distortion` → `Tone.Chorus` → `Tone.FeedbackDelay` → `Tone.Reverb` → `Tone.Analyser` → `Tone.Destination`).
 - Exposes methods: `applyPatch(patch: SynthPatch)`, `setParam(key, value)`, `noteOn(note, velocity)`, `noteOff(note)`, `startDemoLoop(melody)`, `stopDemoLoop()`, and `getWaveformData()`.
 
-### 3. Modular Synth Rack & Rotary Knobs (`src/components/SynthRack.tsx` & `src/components/RotaryKnob.tsx`)
+### 3. Modular Synth Rack, Rotary Knobs & Wave Sculptor (`src/components/SynthRack.tsx`, `src/components/RotaryKnob.tsx` & `src/components/WaveSculptorCanvas.tsx`)
 Implements `prd.md > 1. Real-Time Synthesizer Engine & Modular Controls` and `prd.md > 3. Sidebar AI Sound Designer, Synesthetic Guidance & Persistent Highlights`.
 - Surrounds the center visualizer with four distinct hardware modules: **OSC 1 & OSC 2**, **FILTER**, **ENVELOPE (ADSR)**, and **FX RACK (Distortion, Chorus, Delay, Reverb)**.
 - Each `RotaryKnob` supports vertical drag to adjust values, double-click to reset, 8-bit value readout (`Hz`, `s`, `%`), and a pulsing golden-yellow highlight ring when its parameter key is present in `highlightedParams`. Interacting with the knob immediately clears its highlight state.
+- **Wave Sculptor Canvases (`WaveSculptorCanvas.tsx` & `src/audio/waveMath.ts`):** Embedded in `OSC 1` and `OSC 2`, displaying the exact single-cycle waveform curve (whether standard or AI-sculpted) and allowing users to freehand draw custom waveforms with mouse dragging, which converts to 16 harmonic partials via real-time Discrete Fourier Transform (DFT). Displays the golden-yellow persistent highlight halo when newly sculpted by the AI.
 
 ### 4. Center Real-Time Waveform & Spectrum Visualizer (`src/components/WaveformVisualizer.tsx`)
 Implements `prd.md > Screens and Layout` and `prd.md > 1. Real-Time Synthesizer Engine & Modular Controls`.
@@ -130,7 +131,7 @@ Implements `prd.md > 3. Sidebar AI Sound Designer, Synesthetic Guidance & Persis
 All state lives in browser memory (React state) and is mirrored to `localStorage` (`synthlm_state_v1`) so accidental page refreshes during a demo never lose the user's patches or conversation history. A top-bar `Reset` button clears `localStorage` and restores clean initial defaults.
 
 ```typescript
-export type WaveformType = 'sine' | 'square' | 'triangle' | 'sawtooth';
+export type WaveformType = 'sine' | 'square' | 'triangle' | 'sawtooth' | 'custom';
 export type FilterType = 'lowpass' | 'highpass' | 'bandpass';
 
 export interface SynthPatch {
@@ -140,10 +141,12 @@ export interface SynthPatch {
   osc1Octave: number;       // -2 to +2
   osc1Detune: number;       // -100 to +100 cents
   osc1Mix: number;          // 0.0 to 1.0
+  osc1Partials?: number[];  // 16 harmonic Fourier coefficients [-1.0 to 1.0]
   osc2Type: WaveformType;
   osc2Octave: number;       // -2 to +2
   osc2Detune: number;       // -100 to +100 cents
   osc2Mix: number;          // 0.0 to 1.0
+  osc2Partials?: number[];  // 16 harmonic Fourier coefficients [-1.0 to 1.0]
   // Filter
   filterType: FilterType;
   filterCutoff: number;     // 20 to 18000 Hz
@@ -210,6 +213,7 @@ synthlm/
 │   ├── audio/
 │   │   ├── synthEngine.ts          # Tone.js dual-oscillator + filter + ADSR + 4 FX + analyser graph
 │   │   ├── presets.ts              # Init Sine, Init Square, Init Triangle, Init Saw & parameter bounds
+│   │   ├── waveMath.ts             # Fourier synthesis, real-time DFT harmonic analysis & clamping
 │   │   ├── demoMelody.ts           # Built-in Demo Loop melody sequence (ready for creator's custom notes)
 │   │   └── midiManager.ts          # Web MIDI API device discovery and noteOn/noteOff listener
 │   ├── components/
@@ -217,6 +221,7 @@ synthlm/
 │   │   ├── SynthRack.tsx           # Modular hardware layout surrounding the center visualizer
 │   │   ├── RotaryKnob.tsx          # 8-bit Red/Gold/Yellow SVG knob with drag & persistent AI highlight
 │   │   ├── WaveformVisualizer.tsx  # Center real-time oscilloscope / FFT spectrum canvas
+│   │   ├── WaveSculptorCanvas.tsx  # Interactive single-cycle wave canvas with mouse drawing & AI wave display
 │   │   ├── PianoKeyboard.tsx       # Bottom virtual piano + computer keyboard listener
 │   │   └── AISidebar.tsx           # Right-hand AI Copilot sidebar, model switcher & diff explanation cards
 │   ├── services/

@@ -37,7 +37,7 @@ SynthLM uses a single-viewport, split-workspace layout with no page reloads or m
    - **MIDI Input Status & Selector:** Displays connected Web MIDI input devices (or a calm `"No MIDI Device"` indicator when none is connected).
 2. **Main Synthesizer Rack (Left / Primary Canvas):**
    - Modular rack grid surrounding a central **Real-Time Waveform & Spectrum Visualizer** right in the middle of the synth workspace.
-   - **Oscillator Module (OSC 1 & OSC 2):** Waveform selector (`sine`, `square`, `triangle`, `sawtooth`), Octave/Semitone/Detune, and Mix level.
+   - **Oscillator Module (OSC 1 & OSC 2):** Waveform selector (`sine`, `square`, `triangle`, `sawtooth`, `custom`), Octave, Detune, Mix level, and an **Interactive Single-Cycle Wave Sculptor Canvas** for each oscillator that renders AI-sculpted wave shapes and allows users to hand-draw custom waveforms with real-time DFT Fourier harmonic synthesis.
    - **Filter Module:** Filter type (`lowpass`, `highpass`, `bandpass`), Cutoff Frequency (Hz), and Resonance (Q).
    - **Envelope Module (ADSR):** Attack, Decay, Sustain, and Release controls.
    - **Effects Rack (FX):** Distortion/Drive, Chorus, Delay (time & wet mix), and Reverb (decay & wet mix).
@@ -82,11 +82,13 @@ Source: `scope.md > The Core Loop`, `scope.md > The POC Boundary`.
 ### 3. Sidebar AI Sound Designer, Synesthetic Guidance & Persistent Highlights
 Source: `scope.md > The Unique Kernel`.
 
-- Submitting a natural-language prompt in the right sidebar—whether technical (*"make the bass fatter with shorter attack"*) or synesthetic/atmospheric (*"a sunny-feeling bass"*, *"a winter-feeling lead"*)—translates the intent into updated parameter values and per-parameter acoustic explanations.
-- Modified knobs animate to their new positions and display a persistent gold/yellow highlight ring until the user manually clicks/interacts with that specific knob.
+- Submitting a natural-language prompt in the right sidebar—whether technical (*"make the bass fatter with shorter attack"*) or synesthetic/atmospheric (*"像冰岛冬天极光一样的孤独感音色"*, *"a sunny-feeling bass"*, *"a winter-feeling lead"*)—translates the intent into updated parameter values, bespoke 16-harmonic custom waveform sculpting, and per-parameter acoustic explanations.
+- Modified knobs and sculpted waveform canvases animate to their new positions and display a persistent gold/yellow highlight ring until the user manually clicks/interacts with that specific control.
 - **Acceptance Criteria:**
   - [ ] Submitting a concrete or mood-based sound description updates the relevant synth parameters audibly and visually on the left rack without blocking manual playback.
-  - [ ] Every knob modified by the AI displays a distinct highlight state that remains visible until the user directly clicks or drags that specific knob.
+  - [ ] For abstract/poetic timbres, the AI can sculpt custom single-cycle waveforms (`custom` type with 16 Fourier partials), rendering the wave curve in the oscillator canvas and illuminating it with the persistent golden highlight.
+  - [ ] Users can also freehand draw on the oscillator single-cycle canvas with the mouse to create custom waveforms converted in real time via DFT into playable audio.
+  - [ ] Every knob or wave canvas modified by the AI displays a distinct highlight state that remains visible until the user directly clicks, drags, or draws on that specific control.
   - [ ] The AI sidebar lists each modified parameter with its `Old Value → New Value` and a one-sentence acoustic explanation of why that change achieves the requested sound.
 
 ### 4. Dual Version Comparison: AI `Alpha / Beta` & Manual `A / B`

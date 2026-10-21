@@ -46,6 +46,7 @@ Build mode: fast
 
 ## Final Review
 
+- [x] AI Custom Waveform Sculpting ("AI 画波形") implemented and verified with unit tests & production build
 - [ ] Final review complete — feedback resolved and learner confirms ready to ship
 
 ## Code Tour and App Map
@@ -61,3 +62,5 @@ Reflection: pending
 Activity mode: pending
 
 ## Revisions
+
+- **AI Custom Waveform Sculpting ("AI 画波形") & Interactive Single-Cycle Canvas:** Added `custom` waveform type with 16 Fourier harmonic partials (`src/audio/waveMath.ts`, `src/components/WaveSculptorCanvas.tsx`). Allows Gemini (`gemini-4-argon` / `gemini-3.8-flash`) to generate bespoke single-cycle waveforms for poetic/synesthetic prompts, and enables users to hand-draw custom waves directly on the oscillator canvas with real-time DFT harmonic synthesis.

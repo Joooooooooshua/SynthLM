@@ -135,9 +135,9 @@
 
         <!-- Oscillators -->
         <rect x="200" y="20" width="160" height="85" rx="4" fill="#1f0a0a" stroke="#d4af37" stroke-width="2"/>
-        <text x="280" y="45" fill="#facc15" font-size="11" font-family="monospace" text-anchor="middle" font-weight="bold">OSC 1 (Sine/Sqr/Tri/Saw)</text>
-        <text x="280" y="70" fill="#facc15" font-size="11" font-family="monospace" text-anchor="middle" font-weight="bold">OSC 2 (Detune + Octave)</text>
-        <text x="280" y="92" fill="#ef4444" font-size="9" font-family="monospace" text-anchor="middle">Mixer Gains</text>
+        <text x="280" y="45" fill="#facc15" font-size="10" font-family="monospace" text-anchor="middle" font-weight="bold">OSC 1 (Std + AI Custom Wave)</text>
+        <text x="280" y="70" fill="#facc15" font-size="10" font-family="monospace" text-anchor="middle" font-weight="bold">OSC 2 (Detune + Wave Sculpt)</text>
+        <text x="280" y="92" fill="#ef4444" font-size="9" font-family="monospace" text-anchor="middle">Mixer Gains + 16 Harmonics</text>
 
         <!-- Filter & ADSR -->
         <rect x="400" y="20" width="160" height="85" rx="4" fill="#1f0a0a" stroke="#d4af37" stroke-width="2"/>
@@ -183,9 +183,9 @@
       </div>
 
       <div class="route-stop">
-        <span class="badge">STOP 2</span> <strong>The Two-Stage Synesthetic Reasoner:</strong> <code>src/services/geminiSoundDesigner.ts</code>
+        <span class="badge">STOP 2</span> <strong>The Synesthetic Reasoner & Wave Sculptor:</strong> <code>src/services/geminiSoundDesigner.ts</code> & <code>src/audio/waveMath.ts</code>
         <p>
-          Open <code>geminiSoundDesigner.ts</code>. Look at <code>SYNTH_RESPONSE_JSON_SCHEMA</code> and <code>requestAISoundDesign()</code>. Notice how the model is instructed to first perform a 4-pillar acoustic breakdown (Timbre, Filter, Envelope, Space) before calculating the 21 numeric values. This is why it handles poetic metaphors like <em>"像冰岛冬天极光一样的孤独感音色"</em> with acoustic precision.
+          Open <code>geminiSoundDesigner.ts</code> and <code>waveMath.ts</code>. Look at <code>SYNTH_RESPONSE_JSON_SCHEMA</code> and <code>requestAISoundDesign()</code>: for poetic metaphors like <em>"像冰岛冬天极光一样的孤独感音色"</em> or <em>"玻璃泛音"</em>, the AI can switch oscillators to <code>custom</code> and sculpt 16 Fourier harmonic partials. In <code>waveMath.ts</code>, Discrete Fourier Transform (DFT) seamlessly translates between single-cycle drawn curves and band-limited audio partials!
         </p>
       </div>
 

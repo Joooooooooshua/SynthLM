@@ -115,6 +115,22 @@ export function App() {
     });
   }, []);
 
+  // Handle custom waveform partials change (hand-drawing or custom update)
+  const handlePartialsChange = useCallback((osc: 'osc1Partials' | 'osc2Partials', partials: number[]) => {
+    setCurrentPatch((prev) => {
+      const typeKey = osc === 'osc1Partials' ? 'osc1Type' : 'osc2Type';
+      const next: SynthPatch = {
+        ...prev,
+        [typeKey]: 'custom',
+        [osc]: partials,
+      };
+      synthEngine.applyPatch(next);
+      localStorage.setItem('synthlm_current_patch', JSON.stringify(next));
+      isDirtyRef.current = true;
+      return next;
+    });
+  }, []);
+
   // Handle filter type change
   const handleFilterTypeChange = useCallback((type: FilterType) => {
     setCurrentPatch((prev) => {
@@ -359,6 +375,7 @@ export function App() {
             isPlaying={isAudioLive || isLoopPlaying}
             onParamChange={handleParamChange}
             onWaveformChange={handleWaveformChange}
+            onPartialsChange={handlePartialsChange}
             onFilterTypeChange={handleFilterTypeChange}
             onClearHighlight={handleClearHighlight}
           />

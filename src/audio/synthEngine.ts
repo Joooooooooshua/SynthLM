@@ -82,10 +82,12 @@ class SynthEngine {
       this.osc2Gain = new Tone.Gain(this.currentPatch.osc2Mix);
 
       // Synths
+      const osc1InitOptions = this.currentPatch.osc1Type === 'custom'
+        ? { type: 'custom' as const, partials: this.currentPatch.osc1Partials || [1] }
+        : { type: this.currentPatch.osc1Type };
+
       this.osc1Synth = new Tone.PolySynth(Tone.Synth, {
-        oscillator: {
-          type: this.currentPatch.osc1Type,
-        },
+        oscillator: osc1InitOptions as any,
         envelope: {
           attack: this.currentPatch.attack,
           decay: this.currentPatch.decay,
@@ -95,10 +97,12 @@ class SynthEngine {
       });
       this.osc1Synth.set({ detune: this.currentPatch.osc1Detune });
 
+      const osc2InitOptions = this.currentPatch.osc2Type === 'custom'
+        ? { type: 'custom' as const, partials: this.currentPatch.osc2Partials || [1] }
+        : { type: this.currentPatch.osc2Type };
+
       this.osc2Synth = new Tone.PolySynth(Tone.Synth, {
-        oscillator: {
-          type: this.currentPatch.osc2Type,
-        },
+        oscillator: osc2InitOptions as any,
         envelope: {
           attack: this.currentPatch.attack,
           decay: this.currentPatch.decay,
@@ -149,11 +153,13 @@ class SynthEngine {
 
     try {
       // Oscillators & Envelopes
+      const osc1OscOptions = clamped.osc1Type === 'custom'
+        ? { type: 'custom' as const, partials: clamped.osc1Partials || [1] }
+        : { type: clamped.osc1Type };
+
       this.osc1Synth?.set({
         detune: clamped.osc1Detune,
-        oscillator: {
-          type: clamped.osc1Type,
-        },
+        oscillator: osc1OscOptions as any,
         envelope: {
           attack: clamped.attack,
           decay: clamped.decay,
@@ -162,11 +168,13 @@ class SynthEngine {
         },
       });
 
+      const osc2OscOptions = clamped.osc2Type === 'custom'
+        ? { type: 'custom' as const, partials: clamped.osc2Partials || [1] }
+        : { type: clamped.osc2Type };
+
       this.osc2Synth?.set({
         detune: clamped.osc2Detune,
-        oscillator: {
-          type: clamped.osc2Type,
-        },
+        oscillator: osc2OscOptions as any,
         envelope: {
           attack: clamped.attack,
           decay: clamped.decay,

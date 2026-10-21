@@ -1,4 +1,5 @@
 import { SynthPatch, ParameterMeta, WaveformType, FilterType } from '../types/synth';
+import { getStandardPartials, clampPartials } from './waveMath';
 
 export const PARAMETER_METAS: Record<string, ParameterMeta> = {
   // Dual Oscillators
@@ -38,10 +39,12 @@ export const INIT_SINE: SynthPatch = {
   osc1Octave: 0,
   osc1Detune: 0,
   osc1Mix: 0.85,
+  osc1Partials: getStandardPartials('sine'),
   osc2Type: 'sine',
   osc2Octave: 0,
   osc2Detune: 0,
   osc2Mix: 0.0,
+  osc2Partials: getStandardPartials('sine'),
   filterType: 'lowpass',
   filterCutoff: 12000,
   filterResonance: 1.0,
@@ -64,10 +67,12 @@ export const INIT_SQUARE: SynthPatch = {
   osc1Octave: 0,
   osc1Detune: 0,
   osc1Mix: 0.8,
+  osc1Partials: getStandardPartials('square'),
   osc2Type: 'square',
   osc2Octave: 0,
   osc2Detune: 5,
   osc2Mix: 0.0,
+  osc2Partials: getStandardPartials('square'),
   filterType: 'lowpass',
   filterCutoff: 6500,
   filterResonance: 1.5,
@@ -90,10 +95,12 @@ export const INIT_TRIANGLE: SynthPatch = {
   osc1Octave: 0,
   osc1Detune: 0,
   osc1Mix: 0.85,
+  osc1Partials: getStandardPartials('triangle'),
   osc2Type: 'triangle',
   osc2Octave: 0,
   osc2Detune: 3,
   osc2Mix: 0.0,
+  osc2Partials: getStandardPartials('triangle'),
   filterType: 'lowpass',
   filterCutoff: 8000,
   filterResonance: 1.2,
@@ -116,10 +123,12 @@ export const INIT_SAW: SynthPatch = {
   osc1Octave: 0,
   osc1Detune: 0,
   osc1Mix: 0.8,
+  osc1Partials: getStandardPartials('sawtooth'),
   osc2Type: 'sawtooth',
   osc2Octave: 0,
   osc2Detune: 8,
   osc2Mix: 0.4,
+  osc2Partials: getStandardPartials('sawtooth'),
   filterType: 'lowpass',
   filterCutoff: 4500,
   filterResonance: 2.0,
@@ -143,7 +152,7 @@ export const FOUNDATIONAL_PRESETS: SynthPatch[] = [
   INIT_SAW,
 ];
 
-const VALID_WAVEFORMS: WaveformType[] = ['sine', 'square', 'triangle', 'sawtooth'];
+const VALID_WAVEFORMS: WaveformType[] = ['sine', 'square', 'triangle', 'sawtooth', 'custom'];
 const VALID_FILTERS: FilterType[] = ['lowpass', 'highpass', 'bandpass'];
 
 export function clampValue(val: number | undefined, min: number, max: number, fallback: number): number {
@@ -152,16 +161,21 @@ export function clampValue(val: number | undefined, min: number, max: number, fa
 }
 
 export function clampPatch(patch: Partial<SynthPatch>, fallback: SynthPatch = INIT_SINE): SynthPatch {
+  const osc1Type = VALID_WAVEFORMS.includes(patch.osc1Type as WaveformType) ? (patch.osc1Type as WaveformType) : fallback.osc1Type;
+  const osc2Type = VALID_WAVEFORMS.includes(patch.osc2Type as WaveformType) ? (patch.osc2Type as WaveformType) : fallback.osc2Type;
+
   const result: SynthPatch = {
     name: typeof patch.name === 'string' && patch.name.trim() ? patch.name.trim() : fallback.name,
-    osc1Type: VALID_WAVEFORMS.includes(patch.osc1Type as WaveformType) ? (patch.osc1Type as WaveformType) : fallback.osc1Type,
+    osc1Type,
     osc1Octave: clampValue(patch.osc1Octave, -2, 2, fallback.osc1Octave),
     osc1Detune: clampValue(patch.osc1Detune, -100, 100, fallback.osc1Detune),
     osc1Mix: clampValue(patch.osc1Mix, 0, 1, fallback.osc1Mix),
-    osc2Type: VALID_WAVEFORMS.includes(patch.osc2Type as WaveformType) ? (patch.osc2Type as WaveformType) : fallback.osc2Type,
+    osc1Partials: clampPartials(patch.osc1Partials ?? fallback.osc1Partials, osc1Type),
+    osc2Type,
     osc2Octave: clampValue(patch.osc2Octave, -2, 2, fallback.osc2Octave),
     osc2Detune: clampValue(patch.osc2Detune, -100, 100, fallback.osc2Detune),
     osc2Mix: clampValue(patch.osc2Mix, 0, 1, fallback.osc2Mix),
+    osc2Partials: clampPartials(patch.osc2Partials ?? fallback.osc2Partials, osc2Type),
     filterType: VALID_FILTERS.includes(patch.filterType as FilterType) ? (patch.filterType as FilterType) : fallback.filterType,
     filterCutoff: clampValue(patch.filterCutoff, 20, 18000, fallback.filterCutoff),
     filterResonance: clampValue(patch.filterResonance, 0.1, 18, fallback.filterResonance),

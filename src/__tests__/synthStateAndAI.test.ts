@@ -4,6 +4,7 @@ import { computeDeterministicDiffs } from '../services/geminiSoundDesigner';
 import { demoMelodyManager } from '../audio/demoMelody';
 import { midiNumberToNote } from '../audio/midiManager';
 import { SynthPatch } from '../types/synth';
+import { partialsToSamples, samplesToPartials, clampPartials, getStandardPartials } from '../audio/waveMath';
 
 describe('SynthLM Parameter Bounds & Clamping Safety', () => {
   it('clamps out-of-bounds frequencies and envelopes safely', () => {
@@ -136,5 +137,73 @@ describe('Demo Melody Parser & Web MIDI Note Mapping', () => {
     expect(restored.length).toBe(2);
     expect(restored[0].name).toBe('Lead Var A');
     expect(restored[1].filterCutoff).toBe(7500);
+  });
+});
+
+describe('Waveform Sculpting & Fourier Mathematics (AI 画波形)', () => {
+  it('generates normalized single-cycle samples from harmonic partials', () => {
+    // Pure sine (only 1st harmonic)
+    const sinePartials = [1.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const samples = partialsToSamples(sinePartials, 64);
+
+    expect(samples.length).toBe(64);
+    // At i=0, sin(0) should be 0
+    expect(Math.abs(samples[0])).toBeLessThan(0.01);
+    // At i=16 (quarter phase, pi/2), sin(pi/2) should be 1.0
+    expect(samples[16]).toBeCloseTo(1.0, 1);
+    // Peak value must not exceed 1.0
+    const maxVal = Math.max(...samples.map((v) => Math.abs(v)));
+    expect(maxVal).toBeCloseTo(1.0, 1);
+  });
+
+  it('performs round-trip DFT conversion between drawn samples and partials', () => {
+    // Synthesize a wave with fundamental + 3rd harmonic
+    const inputPartials = [1.0, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const samples = partialsToSamples(inputPartials, 64);
+
+    // Run DFT to extract partials back
+    const extractedPartials = samplesToPartials(samples, 16);
+
+    expect(extractedPartials.length).toBe(16);
+    // Fundamental harmonic should be dominant (close to 1.0)
+    expect(extractedPartials[0]).toBeCloseTo(1.0, 1);
+    // 2nd harmonic should be near zero
+    expect(Math.abs(extractedPartials[1])).toBeLessThan(0.1);
+    // 3rd harmonic should be around 0.5
+    expect(extractedPartials[2]).toBeCloseTo(0.5, 1);
+  });
+
+  it('safely validates and clamps malformed partials arrays', () => {
+    const malformed = [NaN, 'invalid', null, 50, -30, undefined];
+    const clamped = clampPartials(malformed, 'sine');
+
+    expect(clamped.length).toBe(16);
+    expect(clamped.every((v) => typeof v === 'number' && !isNaN(v) && isFinite(v))).toBe(true);
+    // 50 should be clamped to 1.0, -30 to -1.0
+    expect(clamped[3]).toBe(1.0);
+    expect(clamped[4]).toBe(-1.0);
+  });
+
+  it('detects AI custom waveform sculpting in parameter diff calculation', () => {
+    const oldPatch: SynthPatch = {
+      ...INIT_SINE,
+      osc1Type: 'sine',
+      osc1Partials: getStandardPartials('sine'),
+    };
+
+    // AI switches OSC 1 to 'custom' with bespoke aurora harmonics
+    const auroraHarmonics = [0.8, 0.1, 0.6, 0.05, 0.4, 0.0, 0.3, 0.0, 0.2, 0.0, 0.1, 0.0, 0.05, 0.0, 0.0, 0.0];
+    const newPatch: SynthPatch = {
+      ...INIT_SINE,
+      osc1Type: 'custom',
+      osc1Partials: auroraHarmonics,
+    };
+
+    const diffs = computeDeterministicDiffs(oldPatch, newPatch);
+    const waveSculptDiff = diffs.find((d) => d.paramKey === 'osc1Partials');
+
+    expect(waveSculptDiff).toBeDefined();
+    expect(waveSculptDiff?.paramLabel).toBe('OSC 1 WAVE SCULPT');
+    expect(waveSculptDiff?.newValue).toBe('AI SCULPTED WAVE');
   });
 });

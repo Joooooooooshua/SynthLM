@@ -12,16 +12,28 @@ You MUST embrace both!
 
 When given an abstract/poetic prompt:
 1. Deconstruct the metaphor into 4 acoustic pillars inside 'synestheticBridge':
-   - Timbre & Waveforms: How the harmonic spectrum should feel (e.g., cold/hollow -> Triangle/detuned Sine; warm/fat -> Sawtooth/Square with detune).
+   - Timbre & Waveforms: How the harmonic spectrum should feel (e.g., cold/hollow -> Triangle/detuned Sine; warm/fat -> Sawtooth/Square with detune; complex/organic/ethereal -> Custom Sculpted Waveform).
    - Filter & Brightness: The frequency cut and resonance (e.g., distant/veiled -> lower cutoff 800-1500Hz; piercing -> high cutoff or bandpass).
    - Envelope & Motion: The temporal dynamic (e.g., slow evolving breath -> long attack >0.5s & long release >1.5s; punchy -> fast attack <0.02s).
    - Space & Dimension: The acoustic environment (e.g., vast empty tundra -> high reverb wet >0.6 & delay; intimate -> dry, subtle chorus).
-2. Compute the exact updated patch values across all 21 parameters within safe limits.
-3. Generate concise, educational 1-sentence explanations for each changed parameter explaining WHY that change serves the acoustic goal.
-4. Respond in the user's language (e.g. if the user asked in Chinese, write the summary, explanations, and coaching tips in Chinese).
+2. ADVANCED AI WAVEFORM SCULPTING ("AI 画波形"):
+   For rich, poetic, crystalline, metallic, or unique timbres (e.g., "像极光一样的孤独感", "玻璃泛音", "赛博生锈金属", "温暖的电子管饱和"):
+   - You can set 'osc1Type' and/or 'osc2Type' to "custom"!
+   - When set to "custom", you MUST supply 'osc1Partials' (and/or 'osc2Partials') with an array of exactly 16 harmonic Fourier amplitudes between -1.0 and 1.0.
+   - Harmonic Guidelines:
+     * Harmonic 1: Fundamental pitch root.
+     * Harmonics 2 & 3: Warm analog body and octave fifth.
+     * Odd Harmonics (3, 5, 7, 9, 11): Hollow, crystalline, or woody textures.
+     * Upper Harmonics (7, 9, 11, 13, 15): Glass shimmer, metallic sizzle, or icy aurora reflections.
+     * Formant peaks (e.g., bumps at harmonics 3-4 and 7-8): Vocal or choral "aah/ooh" vowel resonances.
+   - If the user explicitly asks for classic standard waveforms (e.g. "pure sine", "clean saw"), keep standard types ("sine" | "square" | "triangle" | "sawtooth").
+3. Compute the exact updated patch values across all parameters within safe limits.
+4. Generate concise, educational 1-sentence explanations for each changed parameter explaining WHY that change serves the acoustic goal.
+5. Respond in the user's language (e.g. if the user asked in Chinese, write the summary, explanations, and coaching tips in Chinese).
 
 SYNTHESIZER PARAMETER RANGES:
-- osc1Type / osc2Type: "sine" | "square" | "triangle" | "sawtooth"
+- osc1Type / osc2Type: "sine" | "square" | "triangle" | "sawtooth" | "custom"
+- osc1Partials / osc2Partials: Array of 16 numbers from -1.0 to 1.0 (used when type is "custom")
 - osc1Octave / osc2Octave: -2 to 2 (integer)
 - osc1Detune / osc2Detune: -100 to 100 cents
 - osc1Mix / osc2Mix: 0.0 to 1.0
@@ -60,11 +72,21 @@ const SYNTH_RESPONSE_JSON_SCHEMA = {
       type: 'object',
       properties: {
         name: { type: 'string' },
-        osc1Type: { type: 'string', enum: ['sine', 'square', 'triangle', 'sawtooth'] },
+        osc1Type: { type: 'string', enum: ['sine', 'square', 'triangle', 'sawtooth', 'custom'] },
+        osc1Partials: {
+          type: 'array',
+          items: { type: 'number' },
+          description: '16 harmonic amplitudes between -1.0 and 1.0',
+        },
         osc1Octave: { type: 'number' },
         osc1Detune: { type: 'number' },
         osc1Mix: { type: 'number' },
-        osc2Type: { type: 'string', enum: ['sine', 'square', 'triangle', 'sawtooth'] },
+        osc2Type: { type: 'string', enum: ['sine', 'square', 'triangle', 'sawtooth', 'custom'] },
+        osc2Partials: {
+          type: 'array',
+          items: { type: 'number' },
+          description: '16 harmonic amplitudes between -1.0 and 1.0',
+        },
         osc2Octave: { type: 'number' },
         osc2Detune: { type: 'number' },
         osc2Mix: { type: 'number' },
@@ -151,6 +173,37 @@ export function computeDeterministicDiffs(
       newValue: newPatch.filterType.toUpperCase(),
       reason: reportedMap.get('filterType') || `Changed filter mode to ${newPatch.filterType} for targeted frequency sculpting.`,
     });
+  }
+
+  // Check custom waveform harmonic partial changes
+  if (newPatch.osc1Type === 'custom') {
+    const oldP = oldPatch.osc1Partials || [];
+    const newP = newPatch.osc1Partials || [];
+    const hasPartialDiff = oldPatch.osc1Type !== 'custom' || newP.some((v, idx) => Math.abs(v - (oldP[idx] ?? 0)) > 0.15);
+    if (hasPartialDiff) {
+      diffs.push({
+        paramKey: 'osc1Partials',
+        paramLabel: 'OSC 1 WAVE SCULPT',
+        oldValue: oldPatch.osc1Type === 'custom' ? 'CUSTOM HARMONICS' : oldPatch.osc1Type.toUpperCase(),
+        newValue: 'AI SCULPTED WAVE',
+        reason: reportedMap.get('osc1Partials') || reportedMap.get('osc1Type') || 'Sculpted a custom 16-harmonic single-cycle waveform tailored to the sound metaphor.',
+      });
+    }
+  }
+
+  if (newPatch.osc2Type === 'custom') {
+    const oldP = oldPatch.osc2Partials || [];
+    const newP = newPatch.osc2Partials || [];
+    const hasPartialDiff = oldPatch.osc2Type !== 'custom' || newP.some((v, idx) => Math.abs(v - (oldP[idx] ?? 0)) > 0.15);
+    if (hasPartialDiff) {
+      diffs.push({
+        paramKey: 'osc2Partials',
+        paramLabel: 'OSC 2 WAVE SCULPT',
+        oldValue: oldPatch.osc2Type === 'custom' ? 'CUSTOM HARMONICS' : oldPatch.osc2Type.toUpperCase(),
+        newValue: 'AI SCULPTED WAVE',
+        reason: reportedMap.get('osc2Partials') || reportedMap.get('osc2Type') || 'Sculpted a custom 16-harmonic single-cycle waveform for OSC 2.',
+      });
+    }
   }
 
   // Check all numeric parameters

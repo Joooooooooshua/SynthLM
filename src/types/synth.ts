@@ -1,4 +1,4 @@
-export type WaveformType = 'sine' | 'square' | 'triangle' | 'sawtooth';
+export type WaveformType = 'sine' | 'square' | 'triangle' | 'sawtooth' | 'custom';
 export type FilterType = 'lowpass' | 'highpass' | 'bandpass';
 
 export interface SynthPatch {
@@ -8,10 +8,12 @@ export interface SynthPatch {
   osc1Octave: number;       // -2 to +2
   osc1Detune: number;       // -100 to +100 cents
   osc1Mix: number;          // 0.0 to 1.0
+  osc1Partials?: number[];  // 16 harmonic Fourier coefficients [-1.0 to 1.0]
   osc2Type: WaveformType;
   osc2Octave: number;       // -2 to +2
   osc2Detune: number;       // -100 to +100 cents
   osc2Mix: number;          // 0.0 to 1.0
+  osc2Partials?: number[];  // 16 harmonic Fourier coefficients [-1.0 to 1.0]
   // Filter
   filterType: FilterType;
   filterCutoff: number;     // 20 to 18000 Hz
