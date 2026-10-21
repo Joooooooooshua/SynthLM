@@ -235,36 +235,57 @@ export async function requestAISoundDesign(
   apiKey: string,
   model: GeminiModelId = 'gemini-4-argon'
 ): Promise<AISoundDesignResponse> {
-  if (!apiKey || !apiKey.trim()) {
-    throw new Error('Gemini API Key is missing. Please set VITE_GEMINI_API_KEY in .env or click [ADD KEY] in the top bar.');
+  let parsed: any;
+
+  if (apiKey && apiKey.trim()) {
+    // Client-side direct call (using provided key from UI modal or local .env)
+    const client = new GoogleGenAI({ apiKey: apiKey.trim() });
+
+    const payload = {
+      userPrompt: prompt,
+      currentPatch: currentPatch,
+    };
+
+    const interaction = await client.interactions.create({
+      model: model,
+      system_instruction: SYNTH_DESIGNER_SYSTEM_PROMPT,
+      input: `USER REQUEST: "${prompt}"\nCURRENT PATCH STATE: ${JSON.stringify(payload)}`,
+      response_format: [
+        {
+          type: 'text',
+          mime_type: 'application/json',
+          schema: SYNTH_RESPONSE_JSON_SCHEMA,
+        },
+      ],
+    });
+
+    const rawText = interaction.output_text;
+    if (!rawText) {
+      throw new Error('No response returned from Gemini API.');
+    }
+
+    parsed = JSON.parse(rawText);
+  } else {
+    // Serverless proxy call (allows visitors on custom domain to play without exposing API keys)
+    try {
+      const response = await fetch('/api/sound-design', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, currentPatch, model }),
+      });
+
+      if (!response.ok) {
+        const errorJson = await response.json().catch(() => ({}));
+        throw new Error(errorJson.error || `Proxy returned ${response.status} ${response.statusText}`);
+      }
+
+      parsed = await response.json();
+    } catch (err: any) {
+      throw new Error(
+        err?.message || 'Gemini API Key is missing. Please set VITE_GEMINI_API_KEY in .env or click [ADD KEY] in the top bar.'
+      );
+    }
   }
-
-  const client = new GoogleGenAI({ apiKey: apiKey.trim() });
-
-  const payload = {
-    userPrompt: prompt,
-    currentPatch: currentPatch,
-  };
-
-  const interaction = await client.interactions.create({
-    model: model,
-    system_instruction: SYNTH_DESIGNER_SYSTEM_PROMPT,
-    input: `USER REQUEST: "${prompt}"\nCURRENT PATCH STATE: ${JSON.stringify(payload)}`,
-    response_format: [
-      {
-        type: 'text',
-        mime_type: 'application/json',
-        schema: SYNTH_RESPONSE_JSON_SCHEMA,
-      },
-    ],
-  });
-
-  const rawText = interaction.output_text;
-  if (!rawText) {
-    throw new Error('No response returned from Gemini API.');
-  }
-
-  const parsed = JSON.parse(rawText) as AISoundDesignResponse;
 
   // Sanitize the patch
   const clampedPatch = clampPatch(parsed.updatedPatch, currentPatch);

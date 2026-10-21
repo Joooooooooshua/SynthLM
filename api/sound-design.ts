@@ -1,0 +1,214 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { GoogleGenAI } from '@google/genai';
+
+// Rate Limiting: IP -> array of request timestamps (last 60s)
+const ipRequestHistory = new Map<string, number[]>();
+const MAX_REQUESTS_PER_MINUTE = 12;
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const windowStart = now - 60 * 1000;
+  const history = (ipRequestHistory.get(ip) || []).filter((t) => t > windowStart);
+
+  if (history.length >= MAX_REQUESTS_PER_MINUTE) {
+    return false;
+  }
+
+  history.push(now);
+  ipRequestHistory.set(ip, history);
+  return true;
+}
+
+const SYNTH_DESIGNER_SYSTEM_PROMPT = `
+You are the Master Sound Designer and Synthesis Engine for SynthLM, a professional 8-bit aesthetic hardware-inspired synthesizer.
+Your task is to sculpt, synthesize, or modify synthesizer parameters based on the user's natural language request and current patch state.
+
+CORE CAPABILITY: TWO-STAGE SYNESTHETIC & ACOUSTIC REASONING
+Users may describe sounds in technical terms (e.g., "shorter attack, boost 1200Hz filter, add 20% reverb") OR in poetic, atmospheric, synesthetic metaphors (e.g., "像冰岛冬天极光一样的孤独感音色", "a sunny warm analog bass", "a crystal pluck in a dream").
+You MUST embrace both!
+
+When given an abstract/poetic prompt:
+1. Deconstruct the metaphor into 4 acoustic pillars inside 'synestheticBridge':
+   - Timbre & Waveforms: How the harmonic spectrum should feel (e.g., cold/hollow -> Triangle/detuned Sine; warm/fat -> Sawtooth/Square with detune; complex/organic/ethereal -> Custom Sculpted Waveform).
+   - Filter & Brightness: The frequency cut and resonance (e.g., distant/veiled -> lower cutoff 800-1500Hz; piercing -> high cutoff or bandpass).
+   - Envelope & Motion: The temporal dynamic (e.g., slow evolving breath -> long attack >0.5s & long release >1.5s; punchy -> fast attack <0.02s).
+   - Space & Dimension: The acoustic environment (e.g., vast empty tundra -> high reverb wet >0.6 & delay; intimate -> dry, subtle chorus).
+2. ADVANCED AI WAVEFORM SCULPTING ("AI 画波形"):
+   For rich, poetic, crystalline, metallic, or unique timbres (e.g., "像极光一样的孤独感", "玻璃泛音", "赛博生锈金属", "温暖的电子管饱和"):
+   - You can set 'osc1Type' and/or 'osc2Type' to "custom"!
+   - When set to "custom", you MUST supply 'osc1Partials' (and/or 'osc2Partials') with an array of exactly 16 harmonic Fourier amplitudes between -1.0 and 1.0.
+   - Harmonic Guidelines:
+     * Harmonic 1: Fundamental pitch root.
+     * Harmonics 2 & 3: Warm analog body and octave fifth.
+     * Odd Harmonics (3, 5, 7, 9, 11): Hollow, crystalline, or woody textures.
+     * Upper Harmonics (7, 9, 11, 13, 15): Glass shimmer, metallic sizzle, or icy aurora reflections.
+     * Formant peaks (e.g., bumps at harmonics 3-4 and 7-8): Vocal or choral "aah/ooh" vowel resonances.
+   - If the user explicitly asks for classic standard waveforms (e.g. "pure sine", "clean saw"), keep standard types ("sine" | "square" | "triangle" | "sawtooth").
+3. Compute the exact updated patch values across all parameters within safe limits.
+4. Generate concise, educational 1-sentence explanations for each changed parameter explaining WHY that change serves the acoustic goal.
+5. Respond in the user's language (e.g. if the user asked in Chinese, write the summary, explanations, and coaching tips in Chinese).
+
+SYNTHESIZER PARAMETER RANGES:
+- osc1Type / osc2Type: "sine" | "square" | "triangle" | "sawtooth" | "custom"
+- osc1Partials / osc2Partials: Array of 16 numbers from -1.0 to 1.0 (used when type is "custom")
+- osc1Octave / osc2Octave: -2 to 2 (integer)
+- osc1Detune / osc2Detune: -100 to 100 cents
+- osc1Mix / osc2Mix: 0.0 to 1.0
+- filterType: "lowpass" | "highpass" | "bandpass"
+- filterCutoff: 20 to 18000 Hz
+- filterResonance: 0.1 to 18.0 Q
+- attack: 0.005 to 3.0 s
+- decay: 0.01 to 3.0 s
+- sustain: 0.0 to 1.0
+- release: 0.01 to 5.0 s
+- distortion: 0.0 to 1.0
+- chorusWet: 0.0 to 1.0
+- delayTime: 0.05 to 1.0 s
+- delayWet: 0.0 to 1.0
+- reverbDecay: 0.5 to 8.0 s
+- reverbWet: 0.0 to 1.0
+- masterVolume: -24 to 0 dB
+`;
+
+const SYNTH_RESPONSE_JSON_SCHEMA = {
+  type: 'object',
+  properties: {
+    patchName: { type: 'string' },
+    summary: { type: 'string' },
+    synestheticBridge: {
+      type: 'object',
+      properties: {
+        timbreAndWaveforms: { type: 'string' },
+        filterAndBrightness: { type: 'string' },
+        envelopeAndMotion: { type: 'string' },
+        spaceAndEffects: { type: 'string' },
+      },
+      required: ['timbreAndWaveforms', 'filterAndBrightness', 'envelopeAndMotion', 'spaceAndEffects'],
+    },
+    updatedPatch: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        osc1Type: { type: 'string', enum: ['sine', 'square', 'triangle', 'sawtooth', 'custom'] },
+        osc1Partials: {
+          type: 'array',
+          items: { type: 'number' },
+          description: '16 harmonic amplitudes between -1.0 and 1.0',
+        },
+        osc1Octave: { type: 'number' },
+        osc1Detune: { type: 'number' },
+        osc1Mix: { type: 'number' },
+        osc2Type: { type: 'string', enum: ['sine', 'square', 'triangle', 'sawtooth', 'custom'] },
+        osc2Partials: {
+          type: 'array',
+          items: { type: 'number' },
+          description: '16 harmonic amplitudes between -1.0 and 1.0',
+        },
+        osc2Octave: { type: 'number' },
+        osc2Detune: { type: 'number' },
+        osc2Mix: { type: 'number' },
+        filterType: { type: 'string', enum: ['lowpass', 'highpass', 'bandpass'] },
+        filterCutoff: { type: 'number' },
+        filterResonance: { type: 'number' },
+        attack: { type: 'number' },
+        decay: { type: 'number' },
+        sustain: { type: 'number' },
+        release: { type: 'number' },
+        distortion: { type: 'number' },
+        chorusWet: { type: 'number' },
+        delayTime: { type: 'number' },
+        delayWet: { type: 'number' },
+        reverbDecay: { type: 'number' },
+        reverbWet: { type: 'number' },
+        masterVolume: { type: 'number' },
+      },
+      required: [
+        'name', 'osc1Type', 'osc1Octave', 'osc1Detune', 'osc1Mix',
+        'osc2Type', 'osc2Octave', 'osc2Detune', 'osc2Mix',
+        'filterType', 'filterCutoff', 'filterResonance',
+        'attack', 'decay', 'sustain', 'release',
+        'distortion', 'chorusWet', 'delayTime', 'delayWet',
+        'reverbDecay', 'reverbWet', 'masterVolume'
+      ],
+    },
+    changes: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          paramKey: { type: 'string' },
+          paramLabel: { type: 'string' },
+          oldValue: { type: 'string' },
+          newValue: { type: 'string' },
+          reason: { type: 'string' },
+        },
+        required: ['paramKey', 'paramLabel', 'oldValue', 'newValue', 'reason'],
+      },
+    },
+    coachingTip: { type: 'string' },
+  },
+  required: ['patchName', 'summary', 'synestheticBridge', 'updatedPatch', 'changes', 'coachingTip'],
+};
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Only accept POST
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  // Rate Limiting by IP
+  const clientIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || 'unknown';
+  if (!checkRateLimit(clientIp)) {
+    return res.status(429).json({
+      error: 'Rate limit exceeded: Please wait a moment before sending another prompt to preserve demo credits.',
+    });
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  if (!apiKey || !apiKey.trim()) {
+    return res.status(500).json({
+      error: 'Server error: Server GEMINI_API_KEY is not configured on Vercel environment variables.',
+    });
+  }
+
+  const { prompt, currentPatch, model = 'gemini-4-argon' } = req.body || {};
+
+  if (!prompt || typeof prompt !== 'string') {
+    return res.status(400).json({ error: 'Missing prompt string in request body.' });
+  }
+
+  try {
+    const client = new GoogleGenAI({ apiKey: apiKey.trim() });
+
+    const payload = {
+      userPrompt: prompt,
+      currentPatch: currentPatch,
+    };
+
+    const interaction = await client.interactions.create({
+      model: model,
+      system_instruction: SYNTH_DESIGNER_SYSTEM_PROMPT,
+      input: `USER REQUEST: "${prompt}"\nCURRENT PATCH STATE: ${JSON.stringify(payload)}`,
+      response_format: [
+        {
+          type: 'text',
+          mime_type: 'application/json',
+          schema: SYNTH_RESPONSE_JSON_SCHEMA,
+        },
+      ],
+    });
+
+    const rawText = interaction.output_text;
+    if (!rawText) {
+      return res.status(502).json({ error: 'Empty output from Gemini API.' });
+    }
+
+    const parsed = JSON.parse(rawText);
+    return res.status(200).json(parsed);
+  } catch (err: any) {
+    console.error('Serverless Gemini Proxy Error:', err);
+    return res.status(500).json({
+      error: err?.message || 'Failed to communicate with Gemini API on proxy.',
+    });
+  }
+}
