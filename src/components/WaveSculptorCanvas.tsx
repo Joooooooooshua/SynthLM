@@ -225,3 +225,4 @@ export const WaveSculptorCanvas: React.FC<WaveSculptorCanvasProps> = ({
     </div>
   );
 };
+

@@ -164,3 +164,4 @@ export function clampPartials(partials: unknown, fallbackType: WaveformType = 's
 
   return result;
 }
+
