@@ -16,13 +16,13 @@ interface AISidebarProps {
 }
 
 const PROMPT_CHIPS = [
-  '像冰岛冬天极光一样的孤独感 Lead',
-  '晴朗温暖感觉的复古粗贝斯',
-  '让这个贝斯更肥厚、更有冲击力',
-  '清澈梦境感的水晶琶音音色',
+  '80年代日本黄金时代微醺电钢琴 (City Pop Rhodes)',
+  '像冰岛冬天极光一样的孤独感音色 (Ambient Pad)',
+  '《银翼杀手》赛博雨夜合成铜管 (CS-80 Brass)',
+  '晴朗温暖感觉的复古粗贝斯 (Analog Moog)',
 ];
 
-export const AISidebar: React.FC<AISidebarProps> = ({
+const AISidebarComponent: React.FC<AISidebarProps> = ({
   chatMessages,
   selectedModel,
   isLoading,
@@ -251,3 +251,5 @@ export const AISidebar: React.FC<AISidebarProps> = ({
     </aside>
   );
 };
+
+export const AISidebar = React.memo(AISidebarComponent);

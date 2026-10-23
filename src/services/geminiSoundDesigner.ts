@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { SynthPatch, AISoundDesignResponse, ParameterChangeExplanation, GeminiModelId } from '../types/synth';
 import { PARAMETER_METAS, clampPatch } from '../audio/presets';
+import { findClosestArchetype } from '../audio/acousticArchetypes';
 
 const SYNTH_DESIGNER_SYSTEM_PROMPT = `
 You are the Master Sound Designer and Synthesis Engine for SynthLM, a professional 8-bit aesthetic hardware-inspired synthesizer.
@@ -40,6 +41,10 @@ SYNTHESIZER PARAMETER RANGES:
 - filterType: "lowpass" | "highpass" | "bandpass"
 - filterCutoff: 20 to 18000 Hz
 - filterResonance: 0.1 to 18.0 Q
+- filterEnvAmount: -6000 to +8000 Hz (filter envelope sweep; positive creates percussive hammer strike/brass swell)
+- lfoRate: 0.1 to 12.0 Hz (modulation frequency)
+- lfoDepth: 0.0 to 1.0 (amount of motion)
+- lfoTarget: "filter" | "pitch" | "tremolo" (vibrato/breathing/tremolo destination)
 - attack: 0.005 to 3.0 s
 - decay: 0.01 to 3.0 s
 - sustain: 0.0 to 1.0
@@ -93,6 +98,10 @@ const SYNTH_RESPONSE_JSON_SCHEMA = {
         filterType: { type: 'string', enum: ['lowpass', 'highpass', 'bandpass'] },
         filterCutoff: { type: 'number' },
         filterResonance: { type: 'number' },
+        filterEnvAmount: { type: 'number' },
+        lfoRate: { type: 'number' },
+        lfoDepth: { type: 'number' },
+        lfoTarget: { type: 'string', enum: ['filter', 'pitch', 'tremolo'] },
         attack: { type: 'number' },
         decay: { type: 'number' },
         sustain: { type: 'number' },
@@ -175,6 +184,16 @@ export function computeDeterministicDiffs(
     });
   }
 
+  if (oldPatch.lfoTarget !== newPatch.lfoTarget) {
+    diffs.push({
+      paramKey: 'lfoTarget',
+      paramLabel: 'LFO TARGET',
+      oldValue: oldPatch.lfoTarget.toUpperCase(),
+      newValue: newPatch.lfoTarget.toUpperCase(),
+      reason: reportedMap.get('lfoTarget') || `Routed LFO modulation to ${newPatch.lfoTarget}.`,
+    });
+  }
+
   // Check custom waveform harmonic partial changes
   if (newPatch.osc1Type === 'custom') {
     const oldP = oldPatch.osc1Partials || [];
@@ -237,6 +256,13 @@ export async function requestAISoundDesign(
 ): Promise<AISoundDesignResponse> {
   let parsed: any;
 
+  // Retrieve closest acoustic master archetype for physical grounding
+  const matchedArchetype = findClosestArchetype(prompt);
+  let acousticGroundingInstruction = '';
+  if (matchedArchetype) {
+    acousticGroundingInstruction = `\n\n[ACOUSTIC MASTER ARCHETYPE GROUNDING]:\nThe user prompt strongly relates to acoustic archetype "${matchedArchetype.name}".\nPhysical Reference Rationale:\n- Timbre: ${matchedArchetype.acousticRationale.timbreAndWaveforms}\n- Filter: ${matchedArchetype.acousticRationale.filterAndBrightness}\n- Motion: ${matchedArchetype.acousticRationale.envelopeAndMotion}\n- Space: ${matchedArchetype.acousticRationale.spaceAndEffects}\nReference Baseline Patch: ${JSON.stringify(matchedArchetype.patch)}\nUse this physical knowledge to sculpt parameters and custom Fourier partials that authentically bring this sound to life.`;
+  }
+
   if (apiKey && apiKey.trim()) {
     // Client-side direct call (using provided key from UI modal or local .env)
     const client = new GoogleGenAI({ apiKey: apiKey.trim() });
@@ -248,7 +274,7 @@ export async function requestAISoundDesign(
 
     const interaction = await client.interactions.create({
       model: model,
-      system_instruction: SYNTH_DESIGNER_SYSTEM_PROMPT,
+      system_instruction: SYNTH_DESIGNER_SYSTEM_PROMPT + acousticGroundingInstruction,
       input: `USER REQUEST: "${prompt}"\nCURRENT PATCH STATE: ${JSON.stringify(payload)}`,
       response_format: [
         {
@@ -266,7 +292,7 @@ export async function requestAISoundDesign(
 
     parsed = JSON.parse(rawText);
   } else {
-    // Serverless proxy call (allows visitors on custom domain to play without exposing API keys)
+    // Serverless proxy call (supports Google Gemini, Nebius Token Factory, and Nebius LoRA models)
     try {
       const response = await fetch('/api/sound-design', {
         method: 'POST',

@@ -9,7 +9,7 @@ interface RotaryKnobProps {
   onInteract?: (key: string) => void;
 }
 
-export const RotaryKnob: React.FC<RotaryKnobProps> = ({
+const RotaryKnobComponent: React.FC<RotaryKnobProps> = ({
   meta,
   value,
   isHighlighted = false,
@@ -175,3 +175,5 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
     </div>
   );
 };
+
+export const RotaryKnob = React.memo(RotaryKnobComponent);

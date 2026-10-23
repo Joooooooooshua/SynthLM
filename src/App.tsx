@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { SynthPatch, WaveformType, FilterType, ChatMessage, GeminiModelId } from './types/synth';
+import { SynthPatch, WaveformType, FilterType, LfoTarget, ChatMessage, GeminiModelId } from './types/synth';
 import { INIT_SINE, clampPatch } from './audio/presets';
 import { synthEngine } from './audio/synthEngine';
 import { midiManager } from './audio/midiManager';
@@ -82,38 +82,46 @@ export function App() {
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
   const [isMelodyModalOpen, setIsMelodyModalOpen] = useState(false);
 
-  // Unsaved changes tracker
+  // Unsaved changes tracker & debounced save
   const isDirtyRef = useRef(false);
+  const saveTimeoutRef = useRef<number | null>(null);
+
+  const debouncedSavePatch = useCallback((patch: SynthPatch) => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = window.setTimeout(() => {
+      localStorage.setItem('synthlm_current_patch', JSON.stringify(patch));
+    }, 250);
+  }, []);
 
   // Sync patch to Tone.js audio engine on change
   const updatePatch = useCallback((newPatch: SynthPatch) => {
     setCurrentPatch(newPatch);
     synthEngine.applyPatch(newPatch);
-    localStorage.setItem('synthlm_current_patch', JSON.stringify(newPatch));
+    debouncedSavePatch(newPatch);
     isDirtyRef.current = true;
-  }, []);
+  }, [debouncedSavePatch]);
 
   // Handle single parameter change
   const handleParamChange = useCallback((key: string, value: number) => {
     setCurrentPatch((prev) => {
       const next = { ...prev, [key]: value };
       synthEngine.applyPatch(next);
-      localStorage.setItem('synthlm_current_patch', JSON.stringify(next));
+      debouncedSavePatch(next);
       isDirtyRef.current = true;
       return next;
     });
-  }, []);
+  }, [debouncedSavePatch]);
 
   // Handle waveform type change
   const handleWaveformChange = useCallback((osc: 'osc1Type' | 'osc2Type', type: WaveformType) => {
     setCurrentPatch((prev) => {
       const next = { ...prev, [osc]: type };
       synthEngine.applyPatch(next);
-      localStorage.setItem('synthlm_current_patch', JSON.stringify(next));
+      debouncedSavePatch(next);
       isDirtyRef.current = true;
       return next;
     });
-  }, []);
+  }, [debouncedSavePatch]);
 
   // Handle custom waveform partials change (hand-drawing or custom update)
   const handlePartialsChange = useCallback((osc: 'osc1Partials' | 'osc2Partials', partials: number[]) => {
@@ -125,22 +133,33 @@ export function App() {
         [osc]: partials,
       };
       synthEngine.applyPatch(next);
-      localStorage.setItem('synthlm_current_patch', JSON.stringify(next));
+      debouncedSavePatch(next);
       isDirtyRef.current = true;
       return next;
     });
-  }, []);
+  }, [debouncedSavePatch]);
 
   // Handle filter type change
   const handleFilterTypeChange = useCallback((type: FilterType) => {
     setCurrentPatch((prev) => {
       const next = { ...prev, filterType: type };
       synthEngine.applyPatch(next);
-      localStorage.setItem('synthlm_current_patch', JSON.stringify(next));
+      debouncedSavePatch(next);
       isDirtyRef.current = true;
       return next;
     });
-  }, []);
+  }, [debouncedSavePatch]);
+
+  // Handle LFO target change
+  const handleLfoTargetChange = useCallback((target: LfoTarget) => {
+    setCurrentPatch((prev) => {
+      const next = { ...prev, lfoTarget: target };
+      synthEngine.applyPatch(next);
+      debouncedSavePatch(next);
+      isDirtyRef.current = true;
+      return next;
+    });
+  }, [debouncedSavePatch]);
 
   // Clear specific knob highlight when user interacts with it
   const handleClearHighlight = useCallback((key: string) => {
@@ -383,6 +402,7 @@ export function App() {
             onWaveformChange={handleWaveformChange}
             onPartialsChange={handlePartialsChange}
             onFilterTypeChange={handleFilterTypeChange}
+            onLfoTargetChange={handleLfoTargetChange}
             onClearHighlight={handleClearHighlight}
           />
 

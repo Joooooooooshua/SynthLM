@@ -1,5 +1,5 @@
 import React from 'react';
-import { SynthPatch, WaveformType, FilterType } from '../types/synth';
+import { SynthPatch, WaveformType, FilterType, LfoTarget } from '../types/synth';
 import { PARAMETER_METAS } from '../audio/presets';
 import { RotaryKnob } from './RotaryKnob';
 import { WaveformVisualizer } from './WaveformVisualizer';
@@ -13,6 +13,7 @@ interface SynthRackProps {
   onWaveformChange: (osc: 'osc1Type' | 'osc2Type', type: WaveformType) => void;
   onPartialsChange: (osc: 'osc1Partials' | 'osc2Partials', partials: number[]) => void;
   onFilterTypeChange: (type: FilterType) => void;
+  onLfoTargetChange?: (target: LfoTarget) => void;
   onClearHighlight: (key: string) => void;
 }
 
@@ -30,7 +31,13 @@ const FILTERS: { type: FilterType; label: string }[] = [
   { type: 'bandpass', label: 'BP' },
 ];
 
-export const SynthRack: React.FC<SynthRackProps> = ({
+const LFO_TARGETS: { target: LfoTarget; label: string }[] = [
+  { target: 'filter', label: 'FILTER' },
+  { target: 'pitch', label: 'PITCH' },
+  { target: 'tremolo', label: 'TREM' },
+];
+
+const SynthRackComponent: React.FC<SynthRackProps> = ({
   patch,
   highlightedParams,
   isPlaying,
@@ -38,6 +45,7 @@ export const SynthRack: React.FC<SynthRackProps> = ({
   onWaveformChange,
   onPartialsChange,
   onFilterTypeChange,
+  onLfoTargetChange,
   onClearHighlight,
 }) => {
   return (
@@ -181,23 +189,23 @@ export const SynthRack: React.FC<SynthRackProps> = ({
         <WaveformVisualizer patch={patch} isPlaying={isPlaying} />
       </div>
 
-      {/* 3. FILTER & MASTER MODULE (Top-Right) */}
+      {/* 3. FILTER, LFO & MASTER MODULE (Top-Right) */}
       <div className="pixel-box p-3 flex flex-col justify-between">
         <div className="pixel-box-header px-2 py-1 flex items-center justify-between mb-2">
-          <span className="text-[10px] font-pixel text-red-400">FILTER & MASTER</span>
-          <span className="text-[8px] font-silkscreen text-yellow-500/80">SHAPING</span>
+          <span className="text-[10px] font-pixel text-red-400">FILTER & LFO</span>
+          <span className="text-[8px] font-silkscreen text-yellow-500/80">SHAPING & MOTION</span>
         </div>
 
         {/* Filter Bay */}
         <div className="border border-[#381616] p-2 rounded mb-2 bg-[#140808]">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[9px] font-pixel text-yellow-400">MODE</span>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[9px] font-pixel text-yellow-400">FILTER MODE</span>
             <div className="flex gap-1">
               {FILTERS.map((f) => (
                 <button
                   key={f.type}
                   onClick={() => onFilterTypeChange(f.type)}
-                  className={`text-[8px] font-silkscreen px-2 py-0.5 rounded border transition-colors ${
+                  className={`text-[8px] font-silkscreen px-1.5 py-0.5 rounded border transition-colors ${
                     patch.filterType === f.type
                       ? 'bg-yellow-500 text-black border-yellow-300 font-bold'
                       : 'bg-[#210c0c] text-yellow-600 border-[#471818] hover:text-yellow-400'
@@ -220,6 +228,51 @@ export const SynthRack: React.FC<SynthRackProps> = ({
               meta={PARAMETER_METAS.filterResonance}
               value={patch.filterResonance}
               isHighlighted={highlightedParams.has('filterResonance')}
+              onChange={onParamChange}
+              onInteract={onClearHighlight}
+            />
+            <RotaryKnob
+              meta={PARAMETER_METAS.filterEnvAmount}
+              value={patch.filterEnvAmount}
+              isHighlighted={highlightedParams.has('filterEnvAmount')}
+              onChange={onParamChange}
+              onInteract={onClearHighlight}
+            />
+          </div>
+        </div>
+
+        {/* LFO Modulation Bay */}
+        <div className="border border-[#381616] p-2 rounded mb-2 bg-[#140808]">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[9px] font-pixel text-yellow-400">LFO DEST</span>
+            <div className="flex gap-1">
+              {LFO_TARGETS.map((t) => (
+                <button
+                  key={t.target}
+                  onClick={() => onLfoTargetChange?.(t.target)}
+                  className={`text-[8px] font-silkscreen px-1.5 py-0.5 rounded border transition-colors ${
+                    patch.lfoTarget === t.target
+                      ? 'bg-red-600 text-yellow-200 border-yellow-400 font-bold shadow-[0_0_6px_#ef4444]'
+                      : 'bg-[#210c0c] text-yellow-600 border-[#471818] hover:text-yellow-400'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex justify-around mt-1">
+            <RotaryKnob
+              meta={PARAMETER_METAS.lfoRate}
+              value={patch.lfoRate}
+              isHighlighted={highlightedParams.has('lfoRate')}
+              onChange={onParamChange}
+              onInteract={onClearHighlight}
+            />
+            <RotaryKnob
+              meta={PARAMETER_METAS.lfoDepth}
+              value={patch.lfoDepth}
+              isHighlighted={highlightedParams.has('lfoDepth')}
               onChange={onParamChange}
               onInteract={onClearHighlight}
             />
@@ -364,3 +417,5 @@ export const SynthRack: React.FC<SynthRackProps> = ({
     </div>
   );
 };
+
+export const SynthRack = React.memo(SynthRackComponent);

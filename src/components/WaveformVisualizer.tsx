@@ -7,7 +7,7 @@ interface WaveformVisualizerProps {
   isPlaying?: boolean;
 }
 
-export const WaveformVisualizer: React.FC<WaveformVisualizerProps> = ({ patch, isPlaying }) => {
+const WaveformVisualizerComponent: React.FC<WaveformVisualizerProps> = ({ patch, isPlaying }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -74,32 +74,34 @@ export const WaveformVisualizer: React.FC<WaveformVisualizerProps> = ({ patch, i
         }
       }
 
-      // Draw Golden-Yellow Waveform Trace
+      // Draw Golden-Yellow Waveform Trace (High-performance multi-pass glow without costly CPU shadowBlur)
       if (waveform) {
-        ctx.lineWidth = 2.5;
-        ctx.strokeStyle = '#facc15';
-        ctx.shadowColor = '#ef4444';
-        ctx.shadowBlur = 8;
-
-        ctx.beginPath();
         const sliceWidth = width / waveform.length;
-        let x = 0;
 
+        // Construct path once
+        const path = new Path2D();
+        let x = 0;
         for (let i = 0; i < waveform.length; i++) {
           const v = waveform[i]; // range -1 to 1
           const y = (v * 0.5 + 0.5) * height;
 
           if (i === 0) {
-            ctx.moveTo(x, y);
+            path.moveTo(x, y);
           } else {
-            ctx.lineTo(x, y);
+            path.lineTo(x, y);
           }
           x += sliceWidth;
         }
 
-        ctx.lineTo(width, height / 2);
-        ctx.stroke();
-        ctx.shadowBlur = 0; // reset shadow
+        // Pass 1: Neon Red Glow Underneath (Fast GPU stroke, zero Gaussian CPU blur)
+        ctx.lineWidth = 5.5;
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.35)';
+        ctx.stroke(path);
+
+        // Pass 2: Sharp Crisp Golden-Yellow Core Line
+        ctx.lineWidth = 2.0;
+        ctx.strokeStyle = '#facc15';
+        ctx.stroke(path);
       } else {
         // Idle line
         ctx.lineWidth = 2;
@@ -169,3 +171,5 @@ export const WaveformVisualizer: React.FC<WaveformVisualizerProps> = ({ patch, i
     </div>
   );
 };
+
+export const WaveformVisualizer = React.memo(WaveformVisualizerComponent);

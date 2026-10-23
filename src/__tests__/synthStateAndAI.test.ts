@@ -5,6 +5,7 @@ import { demoMelodyManager } from '../audio/demoMelody';
 import { midiNumberToNote } from '../audio/midiManager';
 import { SynthPatch } from '../types/synth';
 import { partialsToSamples, samplesToPartials, clampPartials, getStandardPartials } from '../audio/waveMath';
+import { findClosestArchetype } from '../audio/acousticArchetypes';
 
 describe('SynthLM Parameter Bounds & Clamping Safety', () => {
   it('clamps out-of-bounds frequencies and envelopes safely', () => {
@@ -205,5 +206,43 @@ describe('Waveform Sculpting & Fourier Mathematics (AI 画波形)', () => {
     expect(waveSculptDiff).toBeDefined();
     expect(waveSculptDiff?.paramLabel).toBe('OSC 1 WAVE SCULPT');
     expect(waveSculptDiff?.newValue).toBe('AI SCULPTED WAVE');
+  });
+
+  it('safely clamps and diffs Filter Envelope and LFO parameters', () => {
+    const unconstrained = clampPatch({
+      filterEnvAmount: 99999,
+      lfoRate: 50,
+      lfoDepth: 5.5,
+      lfoTarget: 'invalid' as any,
+    }, INIT_SINE);
+
+    expect(unconstrained.filterEnvAmount).toBe(8000);
+    expect(unconstrained.lfoRate).toBe(12);
+    expect(unconstrained.lfoDepth).toBe(1.0);
+    expect(unconstrained.lfoTarget).toBe('filter');
+
+    const diffs = computeDeterministicDiffs(
+      { ...INIT_SINE, lfoTarget: 'filter' },
+      { ...INIT_SINE, lfoTarget: 'pitch', filterEnvAmount: 4800, lfoDepth: 0.3 }
+    );
+
+    const keys = diffs.map((d) => d.paramKey);
+    expect(keys).toContain('lfoTarget');
+    expect(keys).toContain('filterEnvAmount');
+    expect(keys).toContain('lfoDepth');
+  });
+
+  it('correctly maps poetic metaphors to master acoustic archetypes', () => {
+    const cityPopMatch = findClosestArchetype('来一个日本黄金时代纸醉金迷感的电钢琴');
+    expect(cityPopMatch).toBeDefined();
+    expect(cityPopMatch?.id).toBe('tokyo-1984-city-pop-rhodes');
+    expect(cityPopMatch?.patch.filterEnvAmount).toBeGreaterThan(3000);
+    expect(cityPopMatch?.patch.lfoTarget).toBe('pitch');
+
+    const auroraMatch = findClosestArchetype('像冰岛极光一样的孤独感铺底音色');
+    expect(auroraMatch).toBeDefined();
+    expect(auroraMatch?.id).toBe('icelandic-aurora-borealis-pad');
+    expect(auroraMatch?.patch.reverbDecay).toBeGreaterThan(5.0);
+    expect(auroraMatch?.patch.lfoTarget).toBe('filter');
   });
 });

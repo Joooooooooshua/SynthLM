@@ -1,5 +1,6 @@
 export type WaveformType = 'sine' | 'square' | 'triangle' | 'sawtooth' | 'custom';
 export type FilterType = 'lowpass' | 'highpass' | 'bandpass';
+export type LfoTarget = 'filter' | 'pitch' | 'tremolo';
 
 export interface SynthPatch {
   name: string;
@@ -14,10 +15,15 @@ export interface SynthPatch {
   osc2Detune: number;       // -100 to +100 cents
   osc2Mix: number;          // 0.0 to 1.0
   osc2Partials?: number[];  // 16 harmonic Fourier coefficients [-1.0 to 1.0]
-  // Filter
+  // Filter & Filter Envelope
   filterType: FilterType;
   filterCutoff: number;     // 20 to 18000 Hz
   filterResonance: number;  // 0.1 to 18.0 Q
+  filterEnvAmount: number;  // -6000 to +8000 Hz dynamic envelope sweep
+  // LFO (Low Frequency Oscillator)
+  lfoRate: number;          // 0.1 to 12.0 Hz
+  lfoDepth: number;         // 0.0 to 1.0 amount
+  lfoTarget: LfoTarget;     // 'filter' | 'pitch' | 'tremolo'
   // Amplitude Envelope (ADSR)
   attack: number;           // 0.005 to 3.0 seconds
   decay: number;            // 0.01 to 3.0 seconds
@@ -33,7 +39,7 @@ export interface SynthPatch {
   masterVolume: number;     // -24 to 0 dB
 }
 
-export type SynthModule = 'OSC 1' | 'OSC 2' | 'FILTER' | 'ENVELOPE' | 'FX' | 'MASTER';
+export type SynthModule = 'OSC 1' | 'OSC 2' | 'FILTER' | 'LFO' | 'ENVELOPE' | 'FX' | 'MASTER';
 
 export interface ParameterMeta {
   key: keyof SynthPatch;

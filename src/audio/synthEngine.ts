@@ -14,18 +14,27 @@ class SynthEngine {
   private osc1Gain: Tone.Gain | null = null;
   private osc2Gain: Tone.Gain | null = null;
 
-  // Processing Chain
+  // Effects & Modulators
   private filter: Tone.Filter | null = null;
   private distortion: Tone.Distortion | null = null;
   private chorus: Tone.Chorus | null = null;
+  private vibrato: Tone.Vibrato | null = null;
   private delay: Tone.FeedbackDelay | null = null;
   private reverb: Tone.Reverb | null = null;
   private volume: Tone.Volume | null = null;
   private limiter: Tone.Limiter | null = null;
 
+  // LFO
+  private lfo: Tone.LFO | null = null;
+  private lfoTargetGain: Tone.Gain | null = null;
+
   // Analysers
   private waveformAnalyser: Tone.Analyser | null = null;
   private fftAnalyser: Tone.Analyser | null = null;
+
+  // Oscillator Caching to avoid synchronous periodic wave recalculations
+  private cachedOsc1Key = '';
+  private cachedOsc2Key = '';
 
   // Active notes tracking
   private activeNotes = new Map<string, { osc1Note: string; osc2Note: string }>();
@@ -35,6 +44,9 @@ class SynthEngine {
 
     try {
       await Tone.start();
+
+      // Configure low-latency interactive audio context
+      Tone.getContext().lookAhead = 0;
 
       // Create Analysers
       this.waveformAnalyser = new Tone.Analyser('waveform', 512);
@@ -65,6 +77,11 @@ class SynthEngine {
         wet: this.currentPatch.chorusWet,
       }).start();
 
+      this.vibrato = new Tone.Vibrato({
+        frequency: this.currentPatch.lfoRate,
+        depth: this.currentPatch.lfoTarget === 'pitch' ? this.currentPatch.lfoDepth * 0.4 : 0,
+      });
+
       this.distortion = new Tone.Distortion({
         distortion: this.currentPatch.distortion,
         wet: this.currentPatch.distortion > 0 ? 0.8 : 0.0,
@@ -76,6 +93,16 @@ class SynthEngine {
         Q: this.currentPatch.filterResonance,
         rolloff: -24,
       });
+
+      // LFO Setup
+      this.lfoTargetGain = new Tone.Gain(0);
+      this.lfo = new Tone.LFO({
+        frequency: this.currentPatch.lfoRate,
+        min: -1,
+        max: 1,
+      }).start();
+      this.lfo.connect(this.lfoTargetGain);
+      this.setupLfoRouting();
 
       // Gains
       this.osc1Gain = new Tone.Gain(this.currentPatch.osc1Mix);
@@ -96,6 +123,7 @@ class SynthEngine {
         },
       });
       this.osc1Synth.set({ detune: this.currentPatch.osc1Detune });
+      this.cachedOsc1Key = `${this.currentPatch.osc1Type}:${(this.currentPatch.osc1Partials || []).join(',')}`;
 
       const osc2InitOptions = this.currentPatch.osc2Type === 'custom'
         ? { type: 'custom' as const, partials: this.currentPatch.osc2Partials || [1] }
@@ -111,10 +139,11 @@ class SynthEngine {
         },
       });
       this.osc2Synth.set({ detune: this.currentPatch.osc2Detune });
+      this.cachedOsc2Key = `${this.currentPatch.osc2Type}:${(this.currentPatch.osc2Partials || []).join(',')}`;
 
       // Connect Signal Graph:
       // osc1 -> osc1Gain ──┐
-      //                    ├─> filter -> distortion -> chorus -> delay -> reverb -> volume -> analysers -> limiter -> destination
+      //                    ├─> filter -> distortion -> chorus -> vibrato -> delay -> reverb -> volume -> analysers -> limiter -> destination
       // osc2 -> osc2Gain ──┘
       this.osc1Synth.connect(this.osc1Gain);
       this.osc2Synth.connect(this.osc2Gain);
@@ -125,6 +154,7 @@ class SynthEngine {
       this.filter.chain(
         this.distortion,
         this.chorus,
+        this.vibrato,
         this.delay,
         this.reverb,
         this.volume,
@@ -141,6 +171,45 @@ class SynthEngine {
     }
   }
 
+  private setupLfoRouting(): void {
+    if (!this.lfo || !this.lfoTargetGain) return;
+
+    try {
+      this.lfoTargetGain.disconnect();
+
+      const depth = this.currentPatch.lfoDepth;
+      const target = this.currentPatch.lfoTarget;
+
+      // Pitch vibrato via dedicated modulated delay node
+      if (this.vibrato) {
+        if (target === 'pitch' && depth > 0.005) {
+          this.vibrato.frequency.value = this.currentPatch.lfoRate;
+          this.vibrato.depth.value = depth * 0.45;
+        } else {
+          this.vibrato.depth.value = 0;
+        }
+      }
+
+      if (depth < 0.005) {
+        this.lfoTargetGain.gain.value = 0;
+        return;
+      }
+
+      if (target === 'filter' && this.filter) {
+        // Modulate filter cutoff: up to +/- 2400 Hz sweep
+        const sweepRange = Math.min(3500, Math.max(100, this.currentPatch.filterCutoff * 0.75));
+        this.lfoTargetGain.gain.rampTo(depth * sweepRange, 0.05);
+        this.lfoTargetGain.connect(this.filter.frequency);
+      } else if (target === 'tremolo' && this.volume) {
+        // Modulate volume: subtle pulse up to +/- 6 dB
+        this.lfoTargetGain.gain.rampTo(depth * 6, 0.05);
+        this.lfoTargetGain.connect(this.volume.volume);
+      }
+    } catch (e) {
+      console.warn('setupLfoRouting error:', e);
+    }
+  }
+
   public getInitialized(): boolean {
     return this.isInitialized;
   }
@@ -152,14 +221,18 @@ class SynthEngine {
     if (!this.isInitialized) return this.currentPatch;
 
     try {
-      // Oscillators & Envelopes
-      const osc1OscOptions = clamped.osc1Type === 'custom'
-        ? { type: 'custom' as const, partials: clamped.osc1Partials || [1] }
-        : { type: clamped.osc1Type };
+      // 1. Oscillators: Only regenerate wavetables when type or partials actually change!
+      const newOsc1Key = `${clamped.osc1Type}:${(clamped.osc1Partials || []).join(',')}`;
+      if (newOsc1Key !== this.cachedOsc1Key) {
+        const osc1OscOptions = clamped.osc1Type === 'custom'
+          ? { type: 'custom' as const, partials: clamped.osc1Partials || [1] }
+          : { type: clamped.osc1Type };
+        this.osc1Synth?.set({ oscillator: osc1OscOptions as any });
+        this.cachedOsc1Key = newOsc1Key;
+      }
 
       this.osc1Synth?.set({
         detune: clamped.osc1Detune,
-        oscillator: osc1OscOptions as any,
         envelope: {
           attack: clamped.attack,
           decay: clamped.decay,
@@ -168,13 +241,17 @@ class SynthEngine {
         },
       });
 
-      const osc2OscOptions = clamped.osc2Type === 'custom'
-        ? { type: 'custom' as const, partials: clamped.osc2Partials || [1] }
-        : { type: clamped.osc2Type };
+      const newOsc2Key = `${clamped.osc2Type}:${(clamped.osc2Partials || []).join(',')}`;
+      if (newOsc2Key !== this.cachedOsc2Key) {
+        const osc2OscOptions = clamped.osc2Type === 'custom'
+          ? { type: 'custom' as const, partials: clamped.osc2Partials || [1] }
+          : { type: clamped.osc2Type };
+        this.osc2Synth?.set({ oscillator: osc2OscOptions as any });
+        this.cachedOsc2Key = newOsc2Key;
+      }
 
       this.osc2Synth?.set({
         detune: clamped.osc2Detune,
-        oscillator: osc2OscOptions as any,
         envelope: {
           attack: clamped.attack,
           decay: clamped.decay,
@@ -183,40 +260,42 @@ class SynthEngine {
         },
       });
 
-      // Gains
+      // 2. Gains
       if (this.osc1Gain) this.osc1Gain.gain.rampTo(clamped.osc1Mix, 0.05);
       if (this.osc2Gain) this.osc2Gain.gain.rampTo(clamped.osc2Mix, 0.05);
 
-      // Filter
+      // 3. Filter
       if (this.filter) {
         this.filter.type = clamped.filterType;
         this.filter.frequency.rampTo(clamped.filterCutoff, 0.05);
         this.filter.Q.rampTo(clamped.filterResonance, 0.05);
       }
 
-      // Distortion
+      // 4. LFO
+      if (this.lfo) {
+        this.lfo.frequency.rampTo(clamped.lfoRate, 0.05);
+      }
+      this.setupLfoRouting();
+
+      // 5. Effects
       if (this.distortion) {
         this.distortion.distortion = clamped.distortion;
         this.distortion.wet.rampTo(clamped.distortion > 0 ? 0.8 : 0.0, 0.05);
       }
 
-      // Chorus
       if (this.chorus) {
         this.chorus.wet.rampTo(clamped.chorusWet, 0.05);
       }
 
-      // Delay
       if (this.delay) {
         this.delay.delayTime.rampTo(clamped.delayTime, 0.05);
         this.delay.wet.rampTo(clamped.delayWet, 0.05);
       }
 
-      // Reverb
       if (this.reverb) {
         this.reverb.wet.rampTo(clamped.reverbWet, 0.05);
       }
 
-      // Master Volume
       if (this.volume) {
         this.volume.volume.rampTo(clamped.masterVolume, 0.05);
       }
@@ -253,15 +332,29 @@ class SynthEngine {
 
     const osc1Note = this.calculateShiftedNote(note, this.currentPatch.osc1Octave);
     const osc2Note = this.calculateShiftedNote(note, this.currentPatch.osc2Octave);
+    const now = Tone.immediate();
 
     try {
       if (this.currentPatch.osc1Mix > 0.01 && this.osc1Synth) {
-        this.osc1Synth.triggerAttack(osc1Note, undefined, velocity);
+        this.osc1Synth.triggerAttack(osc1Note, now, velocity);
       }
       if (this.currentPatch.osc2Mix > 0.01 && this.osc2Synth) {
-        this.osc2Synth.triggerAttack(osc2Note, undefined, velocity);
+        this.osc2Synth.triggerAttack(osc2Note, now, velocity);
       }
       this.activeNotes.set(note, { osc1Note, osc2Note });
+
+      // Trigger dynamic Filter Envelope sweep (e.g., Electric Piano attack bite / Brass swell)
+      if (this.filter && Math.abs(this.currentPatch.filterEnvAmount) > 10) {
+        const baseCutoff = this.currentPatch.filterCutoff;
+        const envPeak = Math.max(20, Math.min(18000, baseCutoff + this.currentPatch.filterEnvAmount * velocity));
+        const attackTime = Math.max(0.005, this.currentPatch.attack);
+        const decayTime = Math.max(0.01, this.currentPatch.decay);
+
+        this.filter.frequency.cancelScheduledValues(now);
+        this.filter.frequency.setValueAtTime(baseCutoff, now);
+        this.filter.frequency.linearRampToValueAtTime(envPeak, now + attackTime);
+        this.filter.frequency.exponentialRampToValueAtTime(Math.max(20, baseCutoff), now + attackTime + decayTime);
+      }
     } catch (e) {
       console.warn('noteOn error:', e);
     }
@@ -271,17 +364,19 @@ class SynthEngine {
     if (!this.isInitialized) return;
 
     const notes = this.activeNotes.get(note);
+    const now = Tone.immediate();
+
     try {
       if (notes) {
-        if (this.osc1Synth) this.osc1Synth.triggerRelease(notes.osc1Note);
-        if (this.osc2Synth) this.osc2Synth.triggerRelease(notes.osc2Note);
+        if (this.osc1Synth) this.osc1Synth.triggerRelease(notes.osc1Note, now);
+        if (this.osc2Synth) this.osc2Synth.triggerRelease(notes.osc2Note, now);
         this.activeNotes.delete(note);
       } else {
         // Fallback release
         const osc1Note = this.calculateShiftedNote(note, this.currentPatch.osc1Octave);
         const osc2Note = this.calculateShiftedNote(note, this.currentPatch.osc2Octave);
-        this.osc1Synth?.triggerRelease(osc1Note);
-        this.osc2Synth?.triggerRelease(osc2Note);
+        this.osc1Synth?.triggerRelease(osc1Note, now);
+        this.osc2Synth?.triggerRelease(osc2Note, now);
       }
     } catch (e) {
       console.warn('noteOff error:', e);

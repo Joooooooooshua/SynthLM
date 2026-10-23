@@ -1,4 +1,4 @@
-import { SynthPatch, ParameterMeta, WaveformType, FilterType } from '../types/synth';
+import { SynthPatch, ParameterMeta, WaveformType, FilterType, LfoTarget } from '../types/synth';
 import { getStandardPartials, clampPartials } from './waveMath';
 
 export const PARAMETER_METAS: Record<string, ParameterMeta> = {
@@ -14,6 +14,11 @@ export const PARAMETER_METAS: Record<string, ParameterMeta> = {
   // Filter
   filterCutoff: { key: 'filterCutoff', label: 'CUTOFF', module: 'FILTER', min: 20, max: 18000, step: 10, unit: 'Hz', defaultValue: 2500 },
   filterResonance: { key: 'filterResonance', label: 'RESO', module: 'FILTER', min: 0.1, max: 18.0, step: 0.1, unit: 'Q', defaultValue: 1.5 },
+  filterEnvAmount: { key: 'filterEnvAmount', label: 'FLT ENV', module: 'FILTER', min: -6000, max: 8000, step: 50, unit: 'Hz', defaultValue: 0 },
+
+  // LFO
+  lfoRate: { key: 'lfoRate', label: 'LFO RATE', module: 'LFO', min: 0.1, max: 12.0, step: 0.1, unit: 'Hz', defaultValue: 1.5 },
+  lfoDepth: { key: 'lfoDepth', label: 'LFO DEPTH', module: 'LFO', min: 0.0, max: 1.0, step: 0.01, unit: '%', defaultValue: 0.0 },
 
   // ADSR Envelope
   attack: { key: 'attack', label: 'ATTACK', module: 'ENVELOPE', min: 0.005, max: 3.0, step: 0.005, unit: 's', defaultValue: 0.02 },
@@ -48,6 +53,10 @@ export const INIT_SINE: SynthPatch = {
   filterType: 'lowpass',
   filterCutoff: 12000,
   filterResonance: 1.0,
+  filterEnvAmount: 0,
+  lfoRate: 1.5,
+  lfoDepth: 0.0,
+  lfoTarget: 'filter',
   attack: 0.03,
   decay: 0.3,
   sustain: 0.7,
@@ -76,6 +85,10 @@ export const INIT_SQUARE: SynthPatch = {
   filterType: 'lowpass',
   filterCutoff: 6500,
   filterResonance: 1.5,
+  filterEnvAmount: 0,
+  lfoRate: 2.0,
+  lfoDepth: 0.0,
+  lfoTarget: 'filter',
   attack: 0.02,
   decay: 0.25,
   sustain: 0.65,
@@ -104,6 +117,10 @@ export const INIT_TRIANGLE: SynthPatch = {
   filterType: 'lowpass',
   filterCutoff: 8000,
   filterResonance: 1.2,
+  filterEnvAmount: 0,
+  lfoRate: 1.0,
+  lfoDepth: 0.0,
+  lfoTarget: 'pitch',
   attack: 0.04,
   decay: 0.35,
   sustain: 0.7,
@@ -132,6 +149,10 @@ export const INIT_SAW: SynthPatch = {
   filterType: 'lowpass',
   filterCutoff: 4500,
   filterResonance: 2.0,
+  filterEnvAmount: 0,
+  lfoRate: 1.5,
+  lfoDepth: 0.0,
+  lfoTarget: 'filter',
   attack: 0.015,
   decay: 0.3,
   sustain: 0.6,
@@ -154,6 +175,7 @@ export const FOUNDATIONAL_PRESETS: SynthPatch[] = [
 
 const VALID_WAVEFORMS: WaveformType[] = ['sine', 'square', 'triangle', 'sawtooth', 'custom'];
 const VALID_FILTERS: FilterType[] = ['lowpass', 'highpass', 'bandpass'];
+const VALID_LFO_TARGETS: LfoTarget[] = ['filter', 'pitch', 'tremolo'];
 
 export function clampValue(val: number | undefined, min: number, max: number, fallback: number): number {
   if (typeof val !== 'number' || isNaN(val) || !isFinite(val)) return fallback;
@@ -163,6 +185,7 @@ export function clampValue(val: number | undefined, min: number, max: number, fa
 export function clampPatch(patch: Partial<SynthPatch>, fallback: SynthPatch = INIT_SINE): SynthPatch {
   const osc1Type = VALID_WAVEFORMS.includes(patch.osc1Type as WaveformType) ? (patch.osc1Type as WaveformType) : fallback.osc1Type;
   const osc2Type = VALID_WAVEFORMS.includes(patch.osc2Type as WaveformType) ? (patch.osc2Type as WaveformType) : fallback.osc2Type;
+  const lfoTarget = VALID_LFO_TARGETS.includes(patch.lfoTarget as LfoTarget) ? (patch.lfoTarget as LfoTarget) : fallback.lfoTarget;
 
   const result: SynthPatch = {
     name: typeof patch.name === 'string' && patch.name.trim() ? patch.name.trim() : fallback.name,
@@ -179,6 +202,10 @@ export function clampPatch(patch: Partial<SynthPatch>, fallback: SynthPatch = IN
     filterType: VALID_FILTERS.includes(patch.filterType as FilterType) ? (patch.filterType as FilterType) : fallback.filterType,
     filterCutoff: clampValue(patch.filterCutoff, 20, 18000, fallback.filterCutoff),
     filterResonance: clampValue(patch.filterResonance, 0.1, 18, fallback.filterResonance),
+    filterEnvAmount: clampValue(patch.filterEnvAmount, -6000, 8000, fallback.filterEnvAmount ?? 0),
+    lfoRate: clampValue(patch.lfoRate, 0.1, 12, fallback.lfoRate ?? 1.5),
+    lfoDepth: clampValue(patch.lfoDepth, 0, 1, fallback.lfoDepth ?? 0),
+    lfoTarget,
     attack: clampValue(patch.attack, 0.005, 3.0, fallback.attack),
     decay: clampValue(patch.decay, 0.01, 3.0, fallback.decay),
     sustain: clampValue(patch.sustain, 0.0, 1.0, fallback.sustain),

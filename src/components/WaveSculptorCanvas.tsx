@@ -11,7 +11,7 @@ interface WaveSculptorCanvasProps {
   onInteract?: () => void;
 }
 
-export const WaveSculptorCanvas: React.FC<WaveSculptorCanvasProps> = ({
+const WaveSculptorCanvasComponent: React.FC<WaveSculptorCanvasProps> = ({
   oscLabel,
   waveformType,
   partials,
@@ -225,4 +225,6 @@ export const WaveSculptorCanvas: React.FC<WaveSculptorCanvasProps> = ({
     </div>
   );
 };
+
+export const WaveSculptorCanvas = React.memo(WaveSculptorCanvasComponent);
 
