@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SynthPatch } from '../types/synth';
 import { FOUNDATIONAL_PRESETS } from '../audio/presets';
+import { ACOUSTIC_ARCHETYPES } from '../audio/acousticArchetypes';
 import { Play, Square, Save, RotateCcw, Sliders, Music, Key } from 'lucide-react';
 
 interface TopBarProps {
@@ -84,7 +85,8 @@ export const TopBar: React.FC<TopBarProps> = ({
         <select
           value={currentPatch.name}
           onChange={(e) => {
-            const all = [...FOUNDATIONAL_PRESETS, ...savedSnapshots];
+            const archetypePatches = ACOUSTIC_ARCHETYPES.map((a) => a.patch);
+            const all = [...FOUNDATIONAL_PRESETS, ...archetypePatches, ...savedSnapshots];
             const found = all.find((p) => p.name === e.target.value);
             if (found) onSelectPreset(found);
           }}
@@ -94,6 +96,13 @@ export const TopBar: React.FC<TopBarProps> = ({
             {FOUNDATIONAL_PRESETS.map((p) => (
               <option key={p.name} value={p.name}>
                 {p.name}
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label="Master Archetypes (大师声学母版)">
+            {ACOUSTIC_ARCHETYPES.map((a) => (
+              <option key={a.id} value={a.patch.name}>
+                ✦ {a.name}
               </option>
             ))}
           </optgroup>
