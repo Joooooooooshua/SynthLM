@@ -99,7 +99,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               </option>
             ))}
           </optgroup>
-          <optgroup label="Master Archetypes (大师声学母版)">
+          <optgroup label="Master Acoustic Archetypes">
             {ACOUSTIC_ARCHETYPES.map((a) => (
               <option key={a.id} value={a.patch.name}>
                 ✦ {a.name}

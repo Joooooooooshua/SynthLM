@@ -16,10 +16,10 @@ interface AISidebarProps {
 }
 
 const PROMPT_CHIPS = [
-  '80年代日本黄金时代微醺电钢琴 (City Pop Rhodes)',
-  '像冰岛冬天极光一样的孤独感音色 (Ambient Pad)',
-  '《银翼杀手》赛博雨夜合成铜管 (CS-80 Brass)',
-  '晴朗温暖感觉的复古粗贝斯 (Analog Moog)',
+  '1980s Japanese City Pop Electric Piano (Rhodes EP)',
+  'Solitary Icelandic Aurora Borealis (Ambient Pad)',
+  'Blade Runner Cyberpunk Rainstorm Brass (CS-80)',
+  'Warm Punchy Analog Synth Bass (Moog)',
 ];
 
 const AISidebarComponent: React.FC<AISidebarProps> = ({
@@ -76,7 +76,7 @@ const AISidebarComponent: React.FC<AISidebarProps> = ({
             <button
               onClick={onClearHistory}
               className="text-yellow-600/70 hover:text-red-400 p-1 rounded hover:bg-[#2e1010] transition-colors"
-              title="Clear Local Chat History (清空对话记录)"
+              title="Clear Local Chat History"
             >
               <Trash2 size={11} />
             </button>
@@ -106,7 +106,7 @@ const AISidebarComponent: React.FC<AISidebarProps> = ({
               Describe any timbre in natural language or poetic metaphor!
             </p>
             <p className="text-[8px] font-vt323 text-yellow-600/50 mt-1">
-              "像冰岛冬天极光一样的孤独感音色" or "Make this bass fatter"
+              "Solitary winter aurora pad" or "Make this bass fatter"
             </p>
           </div>
         )}
@@ -236,7 +236,7 @@ const AISidebarComponent: React.FC<AISidebarProps> = ({
           type="text"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder="Describe timbre (e.g. '冬天极光般的孤独感')..."
+          placeholder="Describe timbre (e.g. 'solitary winter aurora')..."
           disabled={isLoading}
           className="flex-1 bg-[#0c0404] text-yellow-200 text-xs font-mono px-3 py-2 rounded border border-[#4a1818] focus:outline-none focus:border-yellow-400 disabled:opacity-50"
         />

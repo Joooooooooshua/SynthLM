@@ -82,7 +82,7 @@ Source: `scope.md > The Core Loop`, `scope.md > The POC Boundary`.
 ### 3. Sidebar AI Sound Designer, Synesthetic Guidance & Persistent Highlights
 Source: `scope.md > The Unique Kernel`.
 
-- Submitting a natural-language prompt in the right sidebar—whether technical (*"make the bass fatter with shorter attack"*) or synesthetic/atmospheric (*"像冰岛冬天极光一样的孤独感音色"*, *"a sunny-feeling bass"*, *"a winter-feeling lead"*)—translates the intent into updated parameter values, bespoke 16-harmonic custom waveform sculpting, and per-parameter acoustic explanations.
+- Submitting a natural-language prompt in the right sidebar—whether technical (*"make the bass fatter with shorter attack"*) or synesthetic/atmospheric (*"solitary Icelandic winter aurora borealis pad"*, *"a sunny-feeling bass"*, *"a winter-feeling lead"*)—translates the intent into updated parameter values, bespoke 16-harmonic custom waveform sculpting, and per-parameter acoustic explanations.
 - Modified knobs and sculpted waveform canvases animate to their new positions and display a persistent gold/yellow highlight ring until the user manually clicks/interacts with that specific control.
 - **Acceptance Criteria:**
   - [ ] Submitting a concrete or mood-based sound description updates the relevant synth parameters audibly and visually on the left rack without blocking manual playback.

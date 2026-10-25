@@ -141,7 +141,7 @@ describe('Demo Melody Parser & Web MIDI Note Mapping', () => {
   });
 });
 
-describe('Waveform Sculpting & Fourier Mathematics (AI 画波形)', () => {
+describe('Waveform Sculpting & Fourier Mathematics (AI Wave Sculpting)', () => {
   it('generates normalized single-cycle samples from harmonic partials', () => {
     // Pure sine (only 1st harmonic)
     const sinePartials = [1.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -233,13 +233,13 @@ describe('Waveform Sculpting & Fourier Mathematics (AI 画波形)', () => {
   });
 
   it('correctly maps poetic metaphors to master acoustic archetypes', () => {
-    const cityPopMatch = findClosestArchetype('来一个日本黄金时代纸醉金迷感的电钢琴');
+    const cityPopMatch = findClosestArchetype('Give me an 80s golden age city pop electric piano with rhodes chime');
     expect(cityPopMatch).toBeDefined();
     expect(cityPopMatch?.id).toBe('tokyo-1984-city-pop-rhodes');
     expect(cityPopMatch?.patch.filterEnvAmount).toBeGreaterThan(3000);
     expect(cityPopMatch?.patch.lfoTarget).toBe('pitch');
 
-    const auroraMatch = findClosestArchetype('像冰岛极光一样的孤独感铺底音色');
+    const auroraMatch = findClosestArchetype('A solitary ambient pad like iceland aurora borealis');
     expect(auroraMatch).toBeDefined();
     expect(auroraMatch?.id).toBe('icelandic-aurora-borealis-pad');
     expect(auroraMatch?.patch.reverbDecay).toBeGreaterThan(5.0);

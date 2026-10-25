@@ -19,8 +19,8 @@ export const ACOUSTIC_ARCHETYPES: AcousticArchetype[] = [
     id: 'tokyo-1984-city-pop-rhodes',
     name: 'Tokyo 1984 City Pop EP',
     keywords: [
-      '日本黄金时代', '纸醉金迷', '电钢琴', 'city pop', 'rhodes', 'dx7', '山下达郎',
-      '竹内玛莉亚', '微醺', '80s ep', 'electric piano', 'vintage ep', 'bubble economy'
+      'city pop', 'rhodes', 'dx7', 'tatsuro yamashita', 'mariya takeuchi',
+      '80s ep', 'electric piano', 'vintage ep', 'bubble economy', 'golden age'
     ],
     description: '1980s Japanese City Pop electric piano featuring crystalline tine hammer strike, warm body harmonics, lush chorus, and subtle tape pitch vibrato.',
     patch: {
@@ -65,8 +65,8 @@ export const ACOUSTIC_ARCHETYPES: AcousticArchetype[] = [
     id: 'icelandic-aurora-borealis-pad',
     name: 'Reykjavik Aurora Borealis Pad',
     keywords: [
-      '冰岛极光', '孤独感', 'aurora', 'borealis', 'iceland', 'ambient', 'sigur ros',
-      'olafur arnalds', '空灵', '极地', '孤独', '北极光', 'pad', 'ethereal', 'expansive'
+      'aurora', 'borealis', 'iceland', 'ambient', 'sigur ros',
+      'olafur arnalds', 'arctic', 'solitary', 'northern lights', 'pad', 'ethereal', 'expansive', 'solitude'
     ],
     description: 'Vast, solitary Icelandic ambient pad with hollow odd harmonics, shimmering icy overtones, slow filter LFO breathing, and immense cathedral reverb.',
     patch: {
@@ -111,8 +111,8 @@ export const ACOUSTIC_ARCHETYPES: AcousticArchetype[] = [
     id: 'blade-runner-1982-cs80-brass',
     name: '1982 Cyberpunk CS-80 Brass',
     keywords: [
-      '银翼杀手', 'blade runner', 'cs-80', 'vangelis', '赛博朋克', '雨夜', '合成铜管',
-      'brass', 'cyberpunk', 'nostalgic brass', 'rainy neo-noir'
+      'blade runner', 'cs-80', 'vangelis', 'cyberpunk', 'rainy night', 'synth brass',
+      'brass', 'nostalgic brass', 'rainy neo-noir', 'sci-fi horn'
     ],
     description: 'Iconic Vangelis CS-80 synthesizer brass lead with detuned rich saws, dynamic filter envelope swell, and cinematic tape delay.',
     patch: {
@@ -155,8 +155,8 @@ export const ACOUSTIC_ARCHETYPES: AcousticArchetype[] = [
     id: 'shibuya-neon-slap-bass',
     name: 'Shibuya Neon Slap Bass',
     keywords: [
-      '粗贝斯', 'funk bass', 'synth bass', 'moog bass', 'slap bass', '肥厚贝斯',
-      '冲击力', '80s bass', 'acid bass', 'punchy bass'
+      'funk bass', 'synth bass', 'moog bass', 'slap bass', 'fat bass',
+      'punchy bass', '80s bass', 'acid bass', 'sub bass'
     ],
     description: 'Aggressive, punchy analog synth bass with sub-octave weight, snappy resonant lowpass envelope snap, and driven saturation.',
     patch: {
@@ -199,8 +199,8 @@ export const ACOUSTIC_ARCHETYPES: AcousticArchetype[] = [
     id: 'lofi-dusty-vinyl-keys',
     name: 'Lofi Dusty Vinyl Keys',
     keywords: [
-      'lofi', 'lo-fi', 'vinyl', 'nujabes', 'dusty', 'vintage keys', '旧磁带',
-      '复古键盘', '温暖', 'chillhop', 'nostalgia'
+      'lofi', 'lo-fi', 'vinyl', 'nujabes', 'dusty', 'vintage keys', 'cassette',
+      'tape warble', 'chillhop', 'nostalgia', 'mellow keys'
     ],
     description: 'Warm, mellow electric keys filtered through dusty vinyl warmth with fluttery pitch wow/flutter and bandpass focus.',
     patch: {
@@ -243,8 +243,8 @@ export const ACOUSTIC_ARCHETYPES: AcousticArchetype[] = [
     id: 'glassy-crystal-celesta-pluck',
     name: 'Dreamscape Glassy Pluck',
     keywords: [
-      '水晶', '玻璃', '八音盒', 'crystal', 'glass', 'music box', 'pluck',
-      'celesta', 'harp', '梦境', '空灵水滴', 'bell'
+      'crystal', 'glass', 'music box', 'pluck',
+      'celesta', 'harp', 'dreamscape', 'ethereal pluck', 'bell', 'pristine'
     ],
     description: 'Crystalline music box and glass celesta pluck with pure high partials, delicate attack transient, and shimmering reverb tails.',
     patch: {

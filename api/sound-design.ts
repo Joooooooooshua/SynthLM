@@ -24,7 +24,7 @@ You are the Master Sound Designer and Synthesis Engine for SynthLM, a profession
 Your task is to sculpt, synthesize, or modify synthesizer parameters based on the user's natural language request and current patch state.
 
 CORE CAPABILITY: TWO-STAGE SYNESTHETIC & ACOUSTIC REASONING
-Users may describe sounds in technical terms (e.g., "shorter attack, boost 1200Hz filter, add 20% reverb") OR in poetic, atmospheric, synesthetic metaphors (e.g., "像冰岛冬天极光一样的孤独感音色", "a sunny warm analog bass", "a crystal pluck in a dream").
+Users may describe sounds in technical terms (e.g., "shorter attack, boost 1200Hz filter, add 20% reverb") OR in poetic, atmospheric, synesthetic metaphors (e.g., "solitary Icelandic winter aurora borealis pad", "a sunny warm analog bass", "a crystal pluck in a dream").
 You MUST embrace both!
 
 When given an abstract/poetic prompt:
@@ -33,8 +33,8 @@ When given an abstract/poetic prompt:
    - Filter & Brightness: The frequency cut and resonance (e.g., distant/veiled -> lower cutoff 800-1500Hz; piercing -> high cutoff or bandpass).
    - Envelope & Motion: The temporal dynamic (e.g., slow evolving breath -> long attack >0.5s & long release >1.5s; punchy -> fast attack <0.02s).
    - Space & Dimension: The acoustic environment (e.g., vast empty tundra -> high reverb wet >0.6 & delay; intimate -> dry, subtle chorus).
-2. ADVANCED AI WAVEFORM SCULPTING ("AI 画波形"):
-   For rich, poetic, crystalline, metallic, or unique timbres (e.g., "像极光一样的孤独感", "玻璃泛音", "赛博生锈金属", "温暖的电子管饱和"):
+2. ADVANCED AI WAVEFORM SCULPTING ("AI Wave Sculpting"):
+   For rich, poetic, crystalline, metallic, or unique timbres (e.g., "solitary winter aurora", "glassy overtone", "cyberpunk rusted metal", "warm tube saturation"):
    - You can set 'osc1Type' and/or 'osc2Type' to "custom"!
    - When set to "custom", you MUST supply 'osc1Partials' (and/or 'osc2Partials') with an array of exactly 16 harmonic Fourier amplitudes between -1.0 and 1.0.
    - Harmonic Guidelines:
@@ -46,7 +46,7 @@ When given an abstract/poetic prompt:
    - If the user explicitly asks for classic standard waveforms (e.g. "pure sine", "clean saw"), keep standard types ("sine" | "square" | "triangle" | "sawtooth").
 3. Compute the exact updated patch values across all parameters within safe limits.
 4. Generate concise, educational 1-sentence explanations for each changed parameter explaining WHY that change serves the acoustic goal.
-5. Respond in the user's language (e.g. if the user asked in Chinese, write the summary, explanations, and coaching tips in Chinese).
+5. Respond strictly in English (write the summary, explanations, and coaching tips in English).
 
 SYNTHESIZER PARAMETER RANGES:
 - osc1Type / osc2Type: "sine" | "square" | "triangle" | "sawtooth" | "custom"
@@ -57,6 +57,10 @@ SYNTHESIZER PARAMETER RANGES:
 - filterType: "lowpass" | "highpass" | "bandpass"
 - filterCutoff: 20 to 18000 Hz
 - filterResonance: 0.1 to 18.0 Q
+- filterEnvAmount: -6000 to +8000 Hz (filter envelope sweep; positive creates bright hammer strike or brass swell)
+- lfoRate: 0.1 to 12.0 Hz (modulation frequency)
+- lfoDepth: 0.0 to 1.0 (modulation depth)
+- lfoTarget: "filter" | "pitch" | "tremolo" (vibrato/breathing/tremolo destination)
 - attack: 0.005 to 3.0 s
 - decay: 0.01 to 3.0 s
 - sustain: 0.0 to 1.0
@@ -110,6 +114,10 @@ const SYNTH_RESPONSE_JSON_SCHEMA = {
         filterType: { type: 'string', enum: ['lowpass', 'highpass', 'bandpass'] },
         filterCutoff: { type: 'number' },
         filterResonance: { type: 'number' },
+        filterEnvAmount: { type: 'number' },
+        lfoRate: { type: 'number' },
+        lfoDepth: { type: 'number' },
+        lfoTarget: { type: 'string', enum: ['filter', 'pitch', 'tremolo'] },
         attack: { type: 'number' },
         decay: { type: 'number' },
         sustain: { type: 'number' },
@@ -164,6 +172,64 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
+  const { prompt, currentPatch, model = 'gemini-4-argon' } = req.body || {};
+
+  if (!prompt || typeof prompt !== 'string') {
+    return res.status(400).json({ error: 'Missing prompt string in request body.' });
+  }
+
+  const payload = {
+    userPrompt: prompt,
+    currentPatch: currentPatch,
+  };
+
+  // Support Nebius Token Factory (NVIDIA Open-Source Models & Custom LoRA)
+  if (typeof model === 'string' && model.startsWith('nebius-')) {
+    const nebiusKey = process.env.NEBIUS_API_KEY;
+    if (nebiusKey && nebiusKey.trim()) {
+      try {
+        const nebiusModel = model === 'nebius-synthlm-lora' && process.env.NEBIUS_LORA_MODEL_ID
+          ? process.env.NEBIUS_LORA_MODEL_ID
+          : 'nvidia/Llama-3.1-Nemotron-70B-Instruct';
+
+        const nebiusRes = await fetch('https://api.tokenfactory.nebius.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${nebiusKey.trim()}`,
+          },
+          body: JSON.stringify({
+            model: nebiusModel,
+            messages: [
+              {
+                role: 'system',
+                content: `${SYNTH_DESIGNER_SYSTEM_PROMPT}\n\nIMPORTANT: You MUST respond ONLY with a raw JSON object matching the schema:\n${JSON.stringify(SYNTH_RESPONSE_JSON_SCHEMA)}`,
+              },
+              {
+                role: 'user',
+                content: `USER REQUEST: "${prompt}"\nCURRENT PATCH STATE: ${JSON.stringify(payload)}`,
+              },
+            ],
+            response_format: { type: 'json_object' },
+            temperature: 0.7,
+          }),
+        });
+
+        if (nebiusRes.ok) {
+          const nebiusJson = await nebiusRes.json();
+          const content = nebiusJson.choices?.[0]?.message?.content;
+          if (content) {
+            const parsed = JSON.parse(content);
+            return res.status(200).json(parsed);
+          }
+        }
+      } catch (nebiusErr) {
+        console.warn('Nebius Token Factory call failed, falling back to Gemini:', nebiusErr);
+      }
+    }
+  }
+
+  // Google Gemini API Engine
   const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
   if (!apiKey || !apiKey.trim()) {
     return res.status(500).json({
@@ -171,22 +237,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  const { prompt, currentPatch, model = 'gemini-4-argon' } = req.body || {};
-
-  if (!prompt || typeof prompt !== 'string') {
-    return res.status(400).json({ error: 'Missing prompt string in request body.' });
-  }
-
   try {
+    const geminiModel = model.startsWith('nebius-') ? 'gemini-4-argon' : model;
     const client = new GoogleGenAI({ apiKey: apiKey.trim() });
 
-    const payload = {
-      userPrompt: prompt,
-      currentPatch: currentPatch,
-    };
-
     const interaction = await client.interactions.create({
-      model: model,
+      model: geminiModel,
       system_instruction: SYNTH_DESIGNER_SYSTEM_PROMPT,
       input: `USER REQUEST: "${prompt}"\nCURRENT PATCH STATE: ${JSON.stringify(payload)}`,
       response_format: [
@@ -212,3 +268,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 }
+

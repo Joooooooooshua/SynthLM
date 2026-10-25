@@ -9,7 +9,7 @@ Built for the **Build With AI: Basics** Hackathon.
 ## Features
 
 - **Polyphonic Subtractive Engine:** Dual oscillators (`OSC 1` and `OSC 2`), 24dB resonant filter (Lowpass, Highpass, Bandpass), ADSR envelope, and 4-chain effects rack (Drive, Chorus, Feedback Delay, Reverb) powered by [Tone.js](https://tonejs.github.io/).
-- **AI Custom Waveform Sculpting ("AI 画波形"):** Powered by Google's `gemini-4-argon` and `gemini-3.8-flash` via `@google/genai`. Deconstructs poetic, synesthetic metaphors into 16-harmonic Fourier series, sculpting bespoke single-cycle waveforms for each oscillator.
+- **AI Custom Waveform Sculpting ("AI Wave Sculpting"):** Powered by Google's `gemini-4-argon` and `gemini-3.8-flash` via `@google/genai`. Deconstructs poetic, synesthetic metaphors into 16-harmonic Fourier series, sculpting bespoke single-cycle waveforms for each oscillator.
 - **Interactive Hand-Drawn Waveforms:** Click and drag directly on the oscillator waveform canvas to hand-draw custom waves, converted in real time via Discrete Fourier Transform (DFT) into alias-free Web Audio `PeriodicWave` voices.
 - **Center 60 FPS Visualizer:** Real-time time-domain oscilloscope wave trace with background frequency spectrum bars rendered on HTML5 canvas.
 - **Dual Version Comparison:**

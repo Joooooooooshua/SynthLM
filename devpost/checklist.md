@@ -26,7 +26,7 @@ Build mode: fast
   Spec ref: `spec.md > 6. Sidebar AI Sound Designer & Synesthetic Reasoner`, `spec.md > Data Model`, `spec.md > External Services and Dependencies`, `spec.md > Important Failure Modes`
   Build: Implement `src/services/geminiSoundDesigner.ts` using `@google/genai` `client.interactions.create` and strict JSON `response_format` schema, build `src/components/AISidebar.tsx` with model selector (`gemini-4-argon`, `gemini-3.8-flash`, `gemini-3.5-flash-lite`), API key popover, synesthetic breakdown cards, and parameter diff list, wire automatic `Alpha / Beta` state snapshots and persistent `highlightedParams` clearing on knob click/drag, and add unit tests for diff calculation, `Alpha/Beta` state switching, and highlight clearing.
   Verify (mechanical): Run `npm test -- --run` and `npm run build` and confirm all unit tests for `Alpha/Beta` state transitions, parameter diffing, and persistent highlight clearing pass with zero errors.
-  Learner check: Type a synesthetic prompt like *"给我捏一个像冰岛冬天极光一样的孤独感的音色"* in the right sidebar, watch the modified knobs light up in yellow/gold and read the acoustic explanations, toggle `Alpha / Beta` in the top bar to compare before and after, then click one highlighted knob to confirm its highlight clears.
+  Learner check: Type a synesthetic prompt like *"solitary Icelandic winter aurora borealis pad"* in the right sidebar, watch the modified knobs light up in yellow/gold and read the acoustic explanations, toggle `Alpha / Beta` in the top bar to compare before and after, then click one highlighted knob to confirm its highlight clears.
   Commit: `Add Gemini synesthetic AI sound designer sidebar, Alpha/Beta toggle, and persistent knob highlights`
 
 - [x] **3. Multi-input performance (Web MIDI, typing keyboard, custom Demo Loop) and manual A/B + preset snapshots**
@@ -46,7 +46,7 @@ Build mode: fast
 
 ## Final Review
 
-- [x] AI Custom Waveform Sculpting ("AI 画波形") implemented and verified with unit tests & production build
+- [x] AI Custom Waveform Sculpting ("AI Wave Sculpting") implemented and verified with unit tests & production build
 - [x] Final review complete — feedback resolved and learner confirms ready to ship
 
 ## Code Tour and App Map
@@ -63,4 +63,4 @@ Activity mode: focused alternative (grounded in audio DSP architecture and verif
 
 ## Revisions
 
-- **AI Custom Waveform Sculpting ("AI 画波形") & Interactive Single-Cycle Canvas:** Added `custom` waveform type with 16 Fourier harmonic partials (`src/audio/waveMath.ts`, `src/components/WaveSculptorCanvas.tsx`). Allows Gemini (`gemini-4-argon` / `gemini-3.8-flash`) to generate bespoke single-cycle waveforms for poetic/synesthetic prompts, and enables users to hand-draw custom waves directly on the oscillator canvas with real-time DFT harmonic synthesis.
+- **AI Custom Waveform Sculpting ("AI Wave Sculpting") & Interactive Single-Cycle Canvas:** Added `custom` waveform type with 16 Fourier harmonic partials (`src/audio/waveMath.ts`, `src/components/WaveSculptorCanvas.tsx`). Allows Gemini (`gemini-4-argon` / `gemini-3.8-flash`) to generate bespoke single-cycle waveforms for poetic/synesthetic prompts, and enables users to hand-draw custom waves directly on the oscillator canvas with real-time DFT harmonic synthesis.

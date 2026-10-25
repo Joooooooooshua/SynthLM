@@ -9,6 +9,7 @@
 # Dependencies & build outputs
 node_modules/
 dist/
+dataset/
 *.tsbuildinfo
 .DS_Store
 
