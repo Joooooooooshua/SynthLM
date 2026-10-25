@@ -172,7 +172,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  const { prompt, currentPatch, model = 'gemini-4-argon' } = req.body || {};
+  const { prompt, currentPatch, model = 'nebius-nemotron-super' } = req.body || {};
 
   if (!prompt || typeof prompt !== 'string') {
     return res.status(400).json({ error: 'Missing prompt string in request body.' });
@@ -183,14 +183,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     currentPatch: currentPatch,
   };
 
-  // Support Nebius Token Factory (NVIDIA Open-Source Models & Custom LoRA)
+  // Helper to extract JSON from raw model completions (handles reasoning tags & markdown)
+  function extractJson(rawText: string): any {
+    if (!rawText) return null;
+    let clean = rawText.trim();
+    // Strip reasoning <think> tags if emitted by reasoning models
+    clean = clean.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    // Strip markdown code fences
+    if (clean.startsWith('```json')) clean = clean.slice(7);
+    else if (clean.startsWith('```')) clean = clean.slice(3);
+    if (clean.endsWith('```')) clean = clean.slice(0, -3);
+    clean = clean.trim();
+
+    try {
+      return JSON.parse(clean);
+    } catch {
+      const first = clean.indexOf('{');
+      const last = clean.lastIndexOf('}');
+      if (first !== -1 && last > first) {
+        return JSON.parse(clean.slice(first, last + 1));
+      }
+      return null;
+    }
+  }
+
+  // Support Nebius Token Factory (NVIDIA Nemotron Models & Custom LoRA)
   if (typeof model === 'string' && model.startsWith('nebius-')) {
-    const nebiusKey = process.env.NEBIUS_API_KEY;
+    const nebiusKey = process.env.NEBIUS_API_KEY || process.env.VITE_NEBIUS_API_KEY;
     if (nebiusKey && nebiusKey.trim()) {
       try {
-        const nebiusModel = model === 'nebius-synthlm-lora' && process.env.NEBIUS_LORA_MODEL_ID
-          ? process.env.NEBIUS_LORA_MODEL_ID
-          : 'nvidia/Llama-3.1-Nemotron-70B-Instruct';
+        let nebiusModel = 'nvidia/nemotron-3-super-120b-a12b';
+        if (model === 'nebius-nemotron-ultra') {
+          nebiusModel = 'nvidia/Nemotron-3-Ultra-550b-a55b';
+        } else if (model === 'nebius-nemotron-nano') {
+          nebiusModel = 'nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B';
+        } else if (model === 'nebius-synthlm-lora') {
+          nebiusModel = process.env.NEBIUS_LORA_MODEL_ID || 'nvidia/Nemotron-3-Ultra-550b-a55b';
+        }
 
         const nebiusRes = await fetch('https://api.tokenfactory.nebius.com/v1/chat/completions', {
           method: 'POST',
@@ -210,7 +239,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 content: `USER REQUEST: "${prompt}"\nCURRENT PATCH STATE: ${JSON.stringify(payload)}`,
               },
             ],
-            response_format: { type: 'json_object' },
             temperature: 0.7,
           }),
         });
@@ -219,8 +247,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const nebiusJson = await nebiusRes.json();
           const content = nebiusJson.choices?.[0]?.message?.content;
           if (content) {
-            const parsed = JSON.parse(content);
-            return res.status(200).json(parsed);
+            const parsed = extractJson(content);
+            if (parsed) {
+              parsed.engineSource = 'nebius-nemotron';
+              return res.status(200).json(parsed);
+            }
           }
         }
       } catch (nebiusErr) {

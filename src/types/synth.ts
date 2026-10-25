@@ -72,9 +72,19 @@ export interface AISoundDesignResponse {
   updatedPatch: SynthPatch;
   changes: ParameterChangeExplanation[];
   coachingTip: string;
+  engineSource?: 'nebius-nemotron' | 'gemini' | 'synthnet-neural';
 }
 
-export type GeminiModelId = 'gemini-4-argon' | 'gemini-3.8-flash' | 'gemini-3.5-flash-lite';
+export type GeminiModelId =
+  | 'nebius-nemotron-super'
+  | 'nebius-nemotron-ultra'
+  | 'nebius-nemotron-nano'
+  | 'nebius-synthlm-lora'
+  | 'gemini-4-argon'
+  | 'gemini-3.8-flash'
+  | 'gemini-3.5-flash-lite';
+
+export type AIModelId = GeminiModelId;
 
 export interface ChatMessage {
   id: string;

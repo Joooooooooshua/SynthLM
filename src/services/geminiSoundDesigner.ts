@@ -248,11 +248,32 @@ export function computeDeterministicDiffs(
   return diffs;
 }
 
+function cleanExtractJson(rawText: string): any {
+  if (!rawText) return null;
+  let clean = rawText.trim();
+  clean = clean.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  if (clean.startsWith('```json')) clean = clean.slice(7);
+  else if (clean.startsWith('```')) clean = clean.slice(3);
+  if (clean.endsWith('```')) clean = clean.slice(0, -3);
+  clean = clean.trim();
+
+  try {
+    return JSON.parse(clean);
+  } catch {
+    const first = clean.indexOf('{');
+    const last = clean.lastIndexOf('}');
+    if (first !== -1 && last > first) {
+      return JSON.parse(clean.slice(first, last + 1));
+    }
+    throw new Error('Failed to parse sound design JSON from model completion.');
+  }
+}
+
 export async function requestAISoundDesign(
   prompt: string,
   currentPatch: SynthPatch,
   apiKey: string,
-  model: GeminiModelId = 'gemini-4-argon'
+  model: GeminiModelId = 'nebius-nemotron-super'
 ): Promise<AISoundDesignResponse> {
   let parsed: any;
 
@@ -263,53 +284,106 @@ export async function requestAISoundDesign(
     acousticGroundingInstruction = `\n\n[ACOUSTIC MASTER ARCHETYPE GROUNDING]:\nThe user prompt strongly relates to acoustic archetype "${matchedArchetype.name}".\nPhysical Reference Rationale:\n- Timbre: ${matchedArchetype.acousticRationale.timbreAndWaveforms}\n- Filter: ${matchedArchetype.acousticRationale.filterAndBrightness}\n- Motion: ${matchedArchetype.acousticRationale.envelopeAndMotion}\n- Space: ${matchedArchetype.acousticRationale.spaceAndEffects}\nReference Baseline Patch: ${JSON.stringify(matchedArchetype.patch)}\nUse this physical knowledge to sculpt parameters and custom Fourier partials that authentically bring this sound to life.`;
   }
 
-  if (apiKey && apiKey.trim()) {
-    // Client-side direct call (using provided key from UI modal or local .env)
-    const client = new GoogleGenAI({ apiKey: apiKey.trim() });
+  const isNebiusModel = typeof model === 'string' && model.startsWith('nebius-');
+  const nebiusDirectKey = (import.meta as any).env?.VITE_NEBIUS_API_KEY;
 
-    const payload = {
-      userPrompt: prompt,
-      currentPatch: currentPatch,
-    };
-
-    const interaction = await client.interactions.create({
-      model: model,
-      system_instruction: SYNTH_DESIGNER_SYSTEM_PROMPT + acousticGroundingInstruction,
-      input: `USER REQUEST: "${prompt}"\nCURRENT PATCH STATE: ${JSON.stringify(payload)}`,
-      response_format: [
-        {
-          type: 'text',
-          mime_type: 'application/json',
-          schema: SYNTH_RESPONSE_JSON_SCHEMA,
-        },
-      ],
-    });
-
-    const rawText = interaction.output_text;
-    if (!rawText) {
-      throw new Error('No response returned from Gemini API.');
+  if (isNebiusModel && nebiusDirectKey) {
+    // Direct Nebius Token Factory client-side call (low latency development)
+    let targetModel = 'nvidia/nemotron-3-super-120b-a12b';
+    if (model === 'nebius-nemotron-ultra') {
+      targetModel = 'nvidia/Nemotron-3-Ultra-550b-a55b';
+    } else if (model === 'nebius-nemotron-nano') {
+      targetModel = 'nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B';
+    } else if (model === 'nebius-synthlm-lora') {
+      targetModel = (import.meta as any).env?.VITE_NEBIUS_LORA_MODEL_ID || 'nvidia/Nemotron-3-Ultra-550b-a55b';
     }
 
-    parsed = JSON.parse(rawText);
-  } else {
-    // Serverless proxy call (supports Google Gemini, Nebius Token Factory, and Nebius LoRA models)
     try {
-      const response = await fetch('/api/sound-design', {
+      const res = await fetch('https://api.tokenfactory.nebius.com/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, currentPatch, model }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${nebiusDirectKey.trim()}`,
+        },
+        body: JSON.stringify({
+          model: targetModel,
+          messages: [
+            {
+              role: 'system',
+              content: `${SYNTH_DESIGNER_SYSTEM_PROMPT}${acousticGroundingInstruction}\n\nIMPORTANT: You MUST respond ONLY with a raw JSON object matching the schema:\n${JSON.stringify(SYNTH_RESPONSE_JSON_SCHEMA)}`,
+            },
+            {
+              role: 'user',
+              content: `USER REQUEST: "${prompt}"\nCURRENT PATCH STATE: ${JSON.stringify({ userPrompt: prompt, currentPatch })}`,
+            },
+          ],
+          temperature: 0.7,
+        }),
       });
 
-      if (!response.ok) {
-        const errorJson = await response.json().catch(() => ({}));
-        throw new Error(errorJson.error || `Proxy returned ${response.status} ${response.statusText}`);
+      if (!res.ok) {
+        throw new Error(`Nebius Token Factory error ${res.status}: ${await res.text()}`);
       }
 
-      parsed = await response.json();
-    } catch (err: any) {
-      throw new Error(
-        err?.message || 'Gemini API Key is missing. Please set VITE_GEMINI_API_KEY in .env or click [ADD KEY] in the top bar.'
-      );
+      const data = await res.json();
+      const content = data.choices?.[0]?.message?.content;
+      parsed = cleanExtractJson(content);
+      parsed.engineSource = 'nebius-nemotron';
+    } catch (nebiusErr: any) {
+      console.warn('Direct Nebius call failed, trying proxy:', nebiusErr);
+    }
+  }
+
+  if (!parsed) {
+    if (!isNebiusModel && apiKey && apiKey.trim()) {
+      // Client-side direct Google Gemini SDK call
+      const client = new GoogleGenAI({ apiKey: apiKey.trim() });
+
+      const payload = {
+        userPrompt: prompt,
+        currentPatch: currentPatch,
+      };
+
+      const interaction = await client.interactions.create({
+        model: model,
+        system_instruction: SYNTH_DESIGNER_SYSTEM_PROMPT + acousticGroundingInstruction,
+        input: `USER REQUEST: "${prompt}"\nCURRENT PATCH STATE: ${JSON.stringify(payload)}`,
+        response_format: [
+          {
+            type: 'text',
+            mime_type: 'application/json',
+            schema: SYNTH_RESPONSE_JSON_SCHEMA,
+          },
+        ],
+      });
+
+      const rawText = interaction.output_text;
+      if (!rawText) {
+        throw new Error('No response returned from Gemini API.');
+      }
+
+      parsed = JSON.parse(rawText);
+      parsed.engineSource = 'gemini';
+    } else {
+      // Serverless proxy call (supports Google Gemini & Nebius Token Factory)
+      try {
+        const response = await fetch('/api/sound-design', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, currentPatch, model }),
+        });
+
+        if (!response.ok) {
+          const errorJson = await response.json().catch(() => ({}));
+          throw new Error(errorJson.error || `Proxy returned ${response.status} ${response.statusText}`);
+        }
+
+        parsed = await response.json();
+      } catch (err: any) {
+        throw new Error(
+          err?.message || 'API call failed. Please check network connectivity or your API Key in .env.'
+        );
+      }
     }
   }
 

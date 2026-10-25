@@ -1,0 +1,216 @@
+{
+  "epochs": [
+    {
+      "epoch": 1,
+      "train_loss": 0.2472,
+      "val_loss": 0.2251,
+      "fourier_cos_sim": 0.7562
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.2084,
+      "val_loss": 0.2049,
+      "fourier_cos_sim": 0.7819
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.1963,
+      "val_loss": 0.1982,
+      "fourier_cos_sim": 0.7842
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.191,
+      "val_loss": 0.1939,
+      "fourier_cos_sim": 0.7879
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.1872,
+      "val_loss": 0.1928,
+      "fourier_cos_sim": 0.7875
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.1856,
+      "val_loss": 0.1918,
+      "fourier_cos_sim": 0.7888
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.1844,
+      "val_loss": 0.191,
+      "fourier_cos_sim": 0.7894
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.1826,
+      "val_loss": 0.1934,
+      "fourier_cos_sim": 0.7857
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.1817,
+      "val_loss": 0.1915,
+      "fourier_cos_sim": 0.7886
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.1806,
+      "val_loss": 0.1916,
+      "fourier_cos_sim": 0.7882
+    },
+    {
+      "epoch": 11,
+      "train_loss": 0.1794,
+      "val_loss": 0.1929,
+      "fourier_cos_sim": 0.7865
+    },
+    {
+      "epoch": 12,
+      "train_loss": 0.1781,
+      "val_loss": 0.1941,
+      "fourier_cos_sim": 0.7853
+    },
+    {
+      "epoch": 13,
+      "train_loss": 0.1762,
+      "val_loss": 0.1938,
+      "fourier_cos_sim": 0.7852
+    },
+    {
+      "epoch": 14,
+      "train_loss": 0.1744,
+      "val_loss": 0.1933,
+      "fourier_cos_sim": 0.7857
+    },
+    {
+      "epoch": 15,
+      "train_loss": 0.1726,
+      "val_loss": 0.1926,
+      "fourier_cos_sim": 0.7866
+    },
+    {
+      "epoch": 16,
+      "train_loss": 0.1704,
+      "val_loss": 0.1994,
+      "fourier_cos_sim": 0.7785
+    },
+    {
+      "epoch": 17,
+      "train_loss": 0.1676,
+      "val_loss": 0.1976,
+      "fourier_cos_sim": 0.7807
+    },
+    {
+      "epoch": 18,
+      "train_loss": 0.1654,
+      "val_loss": 0.2,
+      "fourier_cos_sim": 0.7784
+    },
+    {
+      "epoch": 19,
+      "train_loss": 0.1619,
+      "val_loss": 0.2042,
+      "fourier_cos_sim": 0.7738
+    },
+    {
+      "epoch": 20,
+      "train_loss": 0.1597,
+      "val_loss": 0.2022,
+      "fourier_cos_sim": 0.7755
+    },
+    {
+      "epoch": 21,
+      "train_loss": 0.1557,
+      "val_loss": 0.2073,
+      "fourier_cos_sim": 0.7708
+    },
+    {
+      "epoch": 22,
+      "train_loss": 0.1534,
+      "val_loss": 0.2057,
+      "fourier_cos_sim": 0.7717
+    },
+    {
+      "epoch": 23,
+      "train_loss": 0.15,
+      "val_loss": 0.2079,
+      "fourier_cos_sim": 0.7699
+    },
+    {
+      "epoch": 24,
+      "train_loss": 0.1467,
+      "val_loss": 0.2095,
+      "fourier_cos_sim": 0.7682
+    },
+    {
+      "epoch": 25,
+      "train_loss": 0.1434,
+      "val_loss": 0.2093,
+      "fourier_cos_sim": 0.7684
+    },
+    {
+      "epoch": 26,
+      "train_loss": 0.1403,
+      "val_loss": 0.2133,
+      "fourier_cos_sim": 0.7643
+    },
+    {
+      "epoch": 27,
+      "train_loss": 0.1378,
+      "val_loss": 0.2157,
+      "fourier_cos_sim": 0.7618
+    },
+    {
+      "epoch": 28,
+      "train_loss": 0.1354,
+      "val_loss": 0.2166,
+      "fourier_cos_sim": 0.7611
+    },
+    {
+      "epoch": 29,
+      "train_loss": 0.1334,
+      "val_loss": 0.216,
+      "fourier_cos_sim": 0.7617
+    },
+    {
+      "epoch": 30,
+      "train_loss": 0.1314,
+      "val_loss": 0.2158,
+      "fourier_cos_sim": 0.7621
+    },
+    {
+      "epoch": 31,
+      "train_loss": 0.1299,
+      "val_loss": 0.2184,
+      "fourier_cos_sim": 0.7593
+    },
+    {
+      "epoch": 32,
+      "train_loss": 0.1288,
+      "val_loss": 0.2178,
+      "fourier_cos_sim": 0.76
+    },
+    {
+      "epoch": 33,
+      "train_loss": 0.128,
+      "val_loss": 0.2195,
+      "fourier_cos_sim": 0.7582
+    },
+    {
+      "epoch": 34,
+      "train_loss": 0.1274,
+      "val_loss": 0.2198,
+      "fourier_cos_sim": 0.7579
+    },
+    {
+      "epoch": 35,
+      "train_loss": 0.127,
+      "val_loss": 0.2197,
+      "fourier_cos_sim": 0.758
+    }
+  ],
+  "final_val_loss": 0.2197,
+  "final_cos_sim": 0.758
+}

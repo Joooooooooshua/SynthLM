@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 import { clampPatch, clampValue, FOUNDATIONAL_PRESETS, INIT_SINE } from '../audio/presets';
 import { computeDeterministicDiffs } from '../services/geminiSoundDesigner';
 import { demoMelodyManager } from '../audio/demoMelody';
@@ -6,6 +8,7 @@ import { midiNumberToNote } from '../audio/midiManager';
 import { SynthPatch } from '../types/synth';
 import { partialsToSamples, samplesToPartials, clampPartials, getStandardPartials } from '../audio/waveMath';
 import { findClosestArchetype } from '../audio/acousticArchetypes';
+import { runSynthNetInference } from '../audio/neuralAudioMatcher';
 
 describe('SynthLM Parameter Bounds & Clamping Safety', () => {
   it('clamps out-of-bounds frequencies and envelopes safely', () => {
@@ -244,5 +247,59 @@ describe('Waveform Sculpting & Fourier Mathematics (AI Wave Sculpting)', () => {
     expect(auroraMatch?.id).toBe('icelandic-aurora-borealis-pad');
     expect(auroraMatch?.patch.reverbDecay).toBeGreaterThan(5.0);
     expect(auroraMatch?.patch.lfoTarget).toBe('filter');
+
+    const acidMatch = findClosestArchetype('303 acid bassline with screaming resonance');
+    expect(acidMatch).toBeDefined();
+    expect(acidMatch?.id).toBe('tb303-acid-bass-squelch');
+
+    const choirMatch = findClosestArchetype('Ethereal space choir pad with vocal formants');
+    expect(choirMatch).toBeDefined();
+    expect(choirMatch?.id).toBe('solaris-cryo-choir');
+  });
+
+  it('verifies SynthNet-16H browser forward inference on 36-dim features', () => {
+    // Synthetic 36-feature vector
+    const testFeatures = new Array(36).fill(0.2);
+    testFeatures[0] = 1.0; // fundamental
+    testFeatures[2] = 0.5; // 3rd harmonic
+
+    const result = runSynthNetInference(testFeatures);
+
+    expect(result.predictedHarmonics).toHaveLength(16);
+    for (const h of result.predictedHarmonics) {
+      expect(h).toBeGreaterThanOrEqual(-1.0);
+      expect(h).toBeLessThanOrEqual(1.0);
+      expect(Number.isNaN(h)).toBe(false);
+    }
+
+    expect(result.predictedParams.filterCutoff).toBeGreaterThanOrEqual(20);
+    expect(result.predictedParams.filterCutoff).toBeLessThanOrEqual(18000);
+    expect(result.predictedParams.filterResonance).toBeGreaterThanOrEqual(0.1);
+    expect(result.predictedParams.attack).toBeGreaterThanOrEqual(0.005);
+    expect(result.predictedParams.release).toBeLessThanOrEqual(5.0);
+  });
+
+  it('verifies Nebius Token Factory training dataset compliance', () => {
+    const datasetPath = path.resolve(__dirname, '../../dataset/nebius_sft_train.jsonl');
+    expect(fs.existsSync(datasetPath)).toBe(true);
+
+    const lines = fs.readFileSync(datasetPath, 'utf-8').trim().split('\n');
+    expect(lines.length).toBeGreaterThanOrEqual(500);
+
+    // Verify first 10 sample formats
+    for (let i = 0; i < 10; i++) {
+      const parsed = JSON.parse(lines[i]);
+      expect(parsed).toHaveProperty('messages');
+      expect(parsed.messages).toHaveLength(3);
+      expect(parsed.messages[0].role).toBe('system');
+      expect(parsed.messages[1].role).toBe('user');
+      expect(parsed.messages[2].role).toBe('assistant');
+
+      const assistantPayload = JSON.parse(parsed.messages[2].content);
+      expect(assistantPayload).toHaveProperty('patchName');
+      expect(assistantPayload).toHaveProperty('synestheticBridge');
+      expect(assistantPayload).toHaveProperty('updatedPatch');
+      expect(assistantPayload.updatedPatch).toHaveProperty('osc1Type');
+    }
   });
 });

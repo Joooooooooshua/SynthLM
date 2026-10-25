@@ -1,33 +1,43 @@
 # SynthLM 🎛️
 
-> **An instrument-first web synthesizer with an Antigravity-style AI sound designer copilot, real-time Fourier waveform sculpting, 60fps oscilloscope visualizer, and dual comparison systems.**
+> **An instrument-first web synthesizer powered by NVIDIA Nemotron-3 on Nebius Token Factory, PyTorch Neural Inverse Synthesis (SynthNet-16H), real-time 16-order Fourier harmonic wave sculpting, and Google Gemini dual-engine intelligence.**
 
-Built for the **Build With AI: Basics** Hackathon.
+Live Demo: **[https://synth.nlmmt093.top](https://synth.nlmmt093.top)**  
+Demo Video: **[https://youtu.be/Z-xA8vuoRfM](https://youtu.be/Z-xA8vuoRfM)**
 
 ---
 
-## Features
+## Key AI & Neural Synthesis Capabilities
 
-- **Polyphonic Subtractive Engine:** Dual oscillators (`OSC 1` and `OSC 2`), 24dB resonant filter (Lowpass, Highpass, Bandpass), ADSR envelope, and 4-chain effects rack (Drive, Chorus, Feedback Delay, Reverb) powered by [Tone.js](https://tonejs.github.io/).
-- **AI Custom Waveform Sculpting ("AI Wave Sculpting"):** Powered by Google's `gemini-4-argon` and `gemini-3.8-flash` via `@google/genai`. Deconstructs poetic, synesthetic metaphors into 16-harmonic Fourier series, sculpting bespoke single-cycle waveforms for each oscillator.
-- **Interactive Hand-Drawn Waveforms:** Click and drag directly on the oscillator waveform canvas to hand-draw custom waves, converted in real time via Discrete Fourier Transform (DFT) into alias-free Web Audio `PeriodicWave` voices.
-- **Center 60 FPS Visualizer:** Real-time time-domain oscilloscope wave trace with background frequency spectrum bars rendered on HTML5 canvas.
-- **Dual Version Comparison:**
-  - **AI Comparison (Alpha / Beta):** Automatic pre-AI (`Alpha`) and post-AI (`Beta`) state snapshots with persistent animated golden-yellow knob highlight halos that clear upon touch.
-  - **Manual Comparison (A / B):** Independent manual slot banks for storing and comparing user-crafted variations.
-- **Multi-Input Performance:**
-  - Web MIDI controller support (`navigator.requestMIDIAccess`).
-  - Two-row computer keyboard typing (`A`, `W`, `S`, `E`, `D`, `F`...).
-  - Customizable Demo Loop sequencer with inline melody note editor.
-- **Preset Snapshots:** Local browser storage persistence + `.json` preset export.
+### 1. Multi-Tier NVIDIA Nemotron-3 Reasoning on Nebius Token Factory
+- **`nvidia/Nemotron-3-Ultra-550b-a55b` (Deep Acoustic Reasoning):** 550B MoE model that deconstructs complex synesthetic metaphors (e.g., *"1984 Tokyo City Pop Rhodes"*, *"Solitary Icelandic aurora borealis pad"*) into 4 physical pillars (Timbre, Brightness, Dynamics, Space), 22 synthesizer parameters, and bespoke 16-order Fourier harmonic coefficients.
+- **`nvidia/nemotron-3-super-120b-a12b` (Studio Balanced Production):** 120B MoE model balancing deep harmonic richness and sub-second generation speed.
+- **`nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` (Fast Interactive Tweaking):** 30B MoE model optimized for ultra-fast, real-time knob adjustments (< 800ms).
+- **Custom LoRA SFT Pipeline:** Automated dataset generation (`scripts/build_finetune_dataset.mjs`) creating 750+ physics-grounded SFT pairs (`dataset/nebius_sft_train.jsonl`) and automated cloud fine-tuning scripts (`scripts/nebius_finetune.mjs`).
+- **Benchmark & Evaluation Suite:** Real-time test harness (`scripts/evaluate_nemotron.mjs`) tracking parameter MAE and Fourier cosine similarity. Read the full evaluation report in [`docs/NEBIUS_NVIDIA_TRAINING_REPORT.md`](docs/NEBIUS_NVIDIA_TRAINING_REPORT.md).
+
+### 2. PyTorch Neural Inverse Synthesizer (`SynthNet-16H`)
+- **"Match My Sound" Microphone & Audio File Inversion:** Drop in any 1–2 second audio clip (`.wav`/`.mp3`) or click **"MIC (2S)"** to hum or whistle into your microphone.
+- **Trained Deep Residual MLP:** Architecture with 36 input features (16 harmonic overtone peaks from windowed FFT + spectral centroid/rolloff/flatness + 16-frame temporal RMS envelope) trained on 12,000 synthetic audio signals (`training/train_synthnet.py`).
+- **Zero-Dependency Browser Inference:** Compact FP32 neural weights (`src/audio/neuralSpectralWeights.json`) execute forward passes directly in WebAudio JavaScript in **< 2ms**, extracting 16 Fourier partials (`osc1Partials`) and ADSR envelope curves without external libraries.
+
+### 3. Hardware-Grade Web Synthesizer Engine
+- **Hardware-Level Low Latency (< 5ms):** Web Audio context configured with `lookAhead = 0` and `Tone.immediate()`, eliminating scheduler delay for responsive MIDI performance.
+- **16-Order Fourier Wave Sculpting:** Draw single-cycle waveforms by hand on HTML5 canvas or let AI sculpt custom wavetables converted via Discrete Fourier Transform (DFT).
+- **Dual Comparison Systems:**
+  - **AI Alpha / Beta:** Instant pre-AI (`Alpha`) and post-AI (`Beta`) comparison with animated golden knob diff halos.
+  - **Manual A / B:** Independent manual slot banks for storing and testing sound variations.
+- **Center 60 FPS Oscilloscope:** Real-time waveform trace with zero CPU bogging.
+- **Web MIDI Controller Support:** Plug-and-play USB/Bluetooth MIDI keyboard integration.
 
 ---
 
 ## Tech Stack
 
-- **Frontend & Audio:** React 19, TypeScript, Vite, Tailwind CSS v4, Lucide Icons, Tone.js (^15.0.4)
-- **AI Engine:** Google Gemini Interactions API (`@google/genai` >= 2.29.1) with strict JSON Schema output (`gemini-4-argon`, `gemini-3.8-flash`, `gemini-3.5-flash-lite`)
-- **Testing:** Vitest (15 unit tests covering parameter clamping, diffing, DFT wave math, and melody parsing)
+- **Cloud AI & Open Models:** Nebius Token Factory (`https://api.tokenfactory.nebius.com/v1/`), NVIDIA Nemotron-3 (Ultra, Super, Nano), Google Gemini API (`@google/genai`).
+- **Deep Learning & Training:** PyTorch, MPS / CUDA, NumPy, `uv` package manager (`training/train_synthnet.py`).
+- **Frontend & Audio:** React 19, TypeScript, Vite, Tailwind CSS v4, Lucide Icons, Tone.js (`^15.0.4`), Web Audio API.
+- **Testing:** Vitest (19 unit & neural regression tests passing).
 
 ---
 
@@ -35,21 +45,22 @@ Built for the **Build With AI: Basics** Hackathon.
 
 ### 1. Clone & Install
 ```bash
-git clone https://github.com/<your-username>/synthlm.git
-cd synthlm
+git clone https://github.com/Joshua090208/SynthLM.git
+cd SynthLM
 npm install
 ```
 
-### 2. Configure Environment (Optional)
-Copy the example env file and add your Google Gemini API key:
+### 2. Configure API Keys
+Copy the example environment file:
 ```bash
 cp .env.example .env
 ```
-Inside `.env`:
+Inside `.env`, configure your Nebius Token Factory API key and/or Google Gemini key:
 ```env
+NEBIUS_API_KEY=your_nebius_api_key_here
+VITE_NEBIUS_API_KEY=your_nebius_api_key_here
 VITE_GEMINI_API_KEY=your_gemini_api_key_here
 ```
-*(You can also input or change your API key directly inside the SynthLM web UI at any time).*
 
 ### 3. Run Development Server
 ```bash
@@ -57,26 +68,22 @@ npm run dev
 ```
 Open **[http://localhost:5173](http://localhost:5173)** in Google Chrome.
 
-### 4. Run Automated Tests
+### 4. Run PyTorch Neural Training (Scheme B)
 ```bash
-npm test -- --run
+uv run --with torch --with numpy python3 training/train_synthnet.py
 ```
 
-### 5. Build for Production
+### 5. Run Nebius Token Factory Evaluation & Benchmark
 ```bash
+npm run build:dataset
+node scripts/evaluate_nemotron.mjs
+```
+
+### 6. Run Unit Tests & Production Build
+```bash
+npm test
 npm run build
 ```
-
----
-
-## Architecture Guide
-
-SynthLM includes a standalone offline architecture map and interactive code tour:
-Open `devpost/app-map.html` in any web browser to view the complete audio signal flow and data lifecycle diagram.
-
----
-
-## License
 
 [MIT](LICENSE) © 2026 SynthLM Contributors
 

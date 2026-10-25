@@ -4,7 +4,7 @@ import { INIT_SINE, clampPatch } from './audio/presets';
 import { synthEngine } from './audio/synthEngine';
 import { midiManager } from './audio/midiManager';
 import { demoMelodyManager } from './audio/demoMelody';
-import { requestAISoundDesign } from './services/geminiSoundDesigner';
+import { requestAISoundDesign, computeDeterministicDiffs } from './services/geminiSoundDesigner';
 import { TopBar } from './components/TopBar';
 import { SynthRack } from './components/SynthRack';
 import { PianoKeyboard } from './components/PianoKeyboard';
@@ -60,7 +60,7 @@ export function App() {
   const [isAudioLive, setIsAudioLive] = useState(false);
 
   // AI State
-  const [selectedModel, setSelectedModel] = useState<GeminiModelId>('gemini-4-argon');
+  const [selectedModel, setSelectedModel] = useState<GeminiModelId>('nebius-nemotron-super');
   const [apiKey, setApiKey] = useState<string>(() => {
     return localStorage.getItem('synthlm_gemini_key') || import.meta.env.VITE_GEMINI_API_KEY || '';
   });
@@ -355,6 +355,48 @@ export function App() {
     }
   }, [currentPatch, apiKey, selectedModel, updatePatch]);
 
+  // Neural Audio Match (SynthNet-16H)
+  const handleApplyNeuralPatch = useCallback((matchedPatch: SynthPatch, description: string) => {
+    const preSnapshot = { ...currentPatch };
+    setAlphaPatch(preSnapshot);
+    setBetaPatch(matchedPatch);
+    setActiveAiSlot('beta');
+    updatePatch(matchedPatch);
+
+    // Compute diffs and highlight changed knobs
+    const diffs = computeDeterministicDiffs(preSnapshot, matchedPatch);
+    const changedKeys = new Set(diffs.map((d) => d.paramKey));
+    setHighlightedParams(changedKeys);
+
+    // Append Assistant message to chat history
+    const assistantMsg: ChatMessage = {
+      id: `neural_${Date.now()}`,
+      role: 'assistant',
+      content: `Neural Inverse Match (${description}): Reconstructed 16-order Fourier harmonics and envelope from target acoustic signal.`,
+      timestamp: Date.now(),
+      aiResponse: {
+        patchName: matchedPatch.name,
+        summary: `Inverse-synthesized via trained SynthNet-16H deep neural network based on target acoustic signal (${description}).`,
+        synestheticBridge: {
+          timbreAndWaveforms: '16 Fourier overtone amplitudes estimated via deep residual neural network',
+          filterAndBrightness: `Filter cutoff tuned to ${matchedPatch.filterCutoff}Hz with Q=${matchedPatch.filterResonance}`,
+          envelopeAndMotion: `Dynamic ADSR envelope reconstructed (Att: ${matchedPatch.attack}s, Dec: ${matchedPatch.decay}s, Rel: ${matchedPatch.release}s)`,
+          spaceAndEffects: 'Effects calibrated to acoustic source profile',
+        },
+        updatedPatch: matchedPatch,
+        changes: diffs,
+        coachingTip: 'You can now refine this matched timbre using natural language prompts with NVIDIA Nemotron!',
+        engineSource: 'synthnet-neural',
+      },
+    };
+
+    setChatMessages((prev) => {
+      const updated = [...prev, assistantMsg];
+      localStorage.setItem('synthlm_chat_history', JSON.stringify(updated));
+      return updated;
+    });
+  }, [currentPatch, updatePatch]);
+
   const handleSaveApiKey = useCallback((newKey: string) => {
     setApiKey(newKey);
     localStorage.setItem('synthlm_gemini_key', newKey);
@@ -429,6 +471,7 @@ export function App() {
           onSelectPromptChip={(prompt) => handleSendMessage(prompt)}
           onClearHistory={handleClearHistory}
           onKnobFlash={(key) => handleClearHighlight(key)}
+          onApplyNeuralPatch={handleApplyNeuralPatch}
         />
       </div>
 

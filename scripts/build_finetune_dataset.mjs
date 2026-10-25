@@ -1,8 +1,8 @@
 /**
  * SynthLM Acoustic & Fourier Harmonic Fine-Tuning Dataset Generator
  *
- * Generates 500+ physics-grounded, culturally and emotionally diverse training pairs
- * for fine-tuning open-source models (NVIDIA Nemotron / Llama-3.1 on Nebius Token Factory)
+ * Generates 600+ physics-grounded, culturally and emotionally diverse training pairs
+ * for fine-tuning open-source models (NVIDIA Nemotron / Llama on Nebius Token Factory)
  * and Google Gemini.
  */
 
@@ -19,11 +19,11 @@ if (!fs.existsSync(DATASET_DIR)) {
   fs.mkdirSync(DATASET_DIR, { recursive: true });
 }
 
-// 1. Base Archetypes with exact acoustic formulas and Fourier harmonics
+// Import archetypes definition directly for Node script
 const SEED_ARCHETYPES = [
   {
-    category: 'Vintage Electric Piano & Keys',
-    genre: '80s Japanese City Pop',
+    name: 'Tokyo 1984 City Pop EP',
+    category: 'Vintage Electric Piano',
     prompts: [
       'A warm 1984 Tokyo City Pop electric piano with shimmering bell tines and lush chorus',
       'Vintage Rhodes EP with subtle tape pitch flutter and mellow body',
@@ -64,7 +64,7 @@ const SEED_ARCHETYPES = [
       masterVolume: -6,
     },
     bridge: {
-      timbreAndWaveforms: 'OSC1 sculpts rich reed fundamental with 2nd/3rd harmonics; OSC2 at +1 octave with 7th and 11th partials provides crystal tine chime.',
+      timbreAndWaveforms: 'OSC1 sculpts warm reed fundamental with 2nd/3rd harmonics; OSC2 at +1 octave with 7th and 11th partials provides crystal tine chime.',
       filterAndBrightness: 'Lowpass filter with +4800Hz envelope snap delivers percussive hammer strike decaying into warm acoustic body.',
       envelopeAndMotion: 'Ultra-fast 8ms attack with 1.6Hz LFO pitch vibrato creates nostalgic cassette tape flutter.',
       spaceAndEffects: '55% stereo chorus and plate reverb wrap the chords in lush Tokyo night atmosphere.',
@@ -72,8 +72,8 @@ const SEED_ARCHETYPES = [
     coachingTip: 'Play 9th or minor 7th chords to let the tine harmonics and chorus shimmer naturally across the stereo field.',
   },
   {
-    category: 'Atmospheric Ambient & Cinematic',
-    genre: 'Icelandic Post-Rock / Ambient',
+    name: 'Reykjavik Aurora Pad',
+    category: 'Cinematic Ambient Pad',
     prompts: [
       'Reykjavik aurora borealis solitary pad with breathing filter sweep',
       'An expansive, lonely Icelandic tundra ambient pad',
@@ -122,8 +122,8 @@ const SEED_ARCHETYPES = [
     coachingTip: 'Hold sustained chords with sustain pedal to let the slow LFO filter breathing and upper partials interweave.',
   },
   {
-    category: 'Neo-Noir & Cyberpunk Brass',
-    genre: 'Cinematic Synthwave',
+    name: '1982 Cyberpunk Brass',
+    category: 'Neo-Noir Synth Brass',
     prompts: [
       'Blade Runner 1982 iconic CS-80 synthesizer brass swell',
       'Cinematic analog brass lead for rainy neon streets',
@@ -170,8 +170,8 @@ const SEED_ARCHETYPES = [
     coachingTip: 'Pause slightly between notes to let the 180ms brass horn attack swell to full power.',
   },
   {
-    category: 'Bass & Rhythm',
-    genre: 'Electro Funk / Synthwave',
+    name: 'Shibuya Neon Slap Bass',
+    category: 'Funk Synth Bass',
     prompts: [
       'Punchy 80s analog synth bass with sub-weight and snappy attack',
       'Fat Moog style bass with resonant filter pluck',
@@ -218,8 +218,8 @@ const SEED_ARCHETYPES = [
     coachingTip: 'Play short 16th-note staccato lines in low octaves (C1-C2) to showcase the fast filter transient snap.',
   },
   {
-    category: 'Crystalline Plucks & Leads',
-    genre: 'Fantasy / Dream Pop',
+    name: 'Dreamscape Glass Pluck',
+    category: 'Crystalline Pluck',
     prompts: [
       'Crystalline glass music box pluck with shimmering high partials',
       'Ethereal celestial droplet arpeggio lead',
@@ -267,9 +267,147 @@ const SEED_ARCHETYPES = [
     },
     coachingTip: 'Enable the Demo Loop arpeggiator to weave the high harmonics and stereo delay into a twinkling constellation.',
   },
+  {
+    name: 'Wurlitzer 200A Reed Piano',
+    category: 'Vintage Keys',
+    prompts: [
+      'Vintage Wurlitzer 200A reed electric piano with classic stereo tremolo and biting bark',
+      'Ray Charles style electric piano with warm tube saturation and soulful tremolo',
+      'Soulful reed piano with vintage mechanical strike and dynamic velocity bite',
+    ],
+    patch: {
+      name: 'Wurlitzer 200A Reed Piano',
+      osc1Type: 'custom',
+      osc1Octave: 0,
+      osc1Detune: -3,
+      osc1Mix: 0.9,
+      osc1Partials: [1.0, 0.65, 0.35, 0.18, 0.22, 0.08, 0.05, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      osc2Type: 'triangle',
+      osc2Octave: 0,
+      osc2Detune: 4,
+      osc2Mix: 0.4,
+      filterType: 'lowpass',
+      filterCutoff: 4200,
+      filterResonance: 2.8,
+      filterEnvAmount: 3600,
+      lfoRate: 5.2,
+      lfoDepth: 0.45,
+      lfoTarget: 'tremolo',
+      attack: 0.008,
+      decay: 0.95,
+      sustain: 0.28,
+      release: 0.48,
+      distortion: 0.18,
+      chorusWet: 0.25,
+      delayTime: 0.22,
+      delayWet: 0.12,
+      reverbDecay: 1.8,
+      reverbWet: 0.2,
+      masterVolume: -5,
+    },
+    bridge: {
+      timbreAndWaveforms: 'Strong 2nd and 3rd harmonic partials model the mechanical reed strike vibration.',
+      filterAndBrightness: 'Medium lowpass envelope sweep produces dynamic bark when velocity is high.',
+      envelopeAndMotion: '5.2Hz tremolo amplitude modulation generates the iconic Wurli vibrato.',
+      spaceAndEffects: '18% tube distortion replicates the driven built-in speaker pair.',
+    },
+    coachingTip: 'Play with strong rhythmic dynamics to let the reed bark bite through the mix.',
+  },
+  {
+    name: 'TB-303 Acid Squelch',
+    category: 'Acid Techno Bass',
+    prompts: [
+      'Roland TB-303 acid bassline with screaming resonant filter sweeps and raw distortion',
+      'Classic 90s acid house bass squelch with aggressive filter snap',
+      'Underground rave 303 acid lead with high resonance and driving delay',
+    ],
+    patch: {
+      name: 'TB-303 Acid Squelch',
+      osc1Type: 'sawtooth',
+      osc1Octave: -1,
+      osc1Detune: 0,
+      osc1Mix: 1.0,
+      osc2Type: 'square',
+      osc2Octave: -1,
+      osc2Detune: 0,
+      osc2Mix: 0.0,
+      filterType: 'lowpass',
+      filterCutoff: 850,
+      filterResonance: 12.5,
+      filterEnvAmount: 7800,
+      lfoRate: 0.5,
+      lfoDepth: 0.0,
+      lfoTarget: 'filter',
+      attack: 0.005,
+      decay: 0.32,
+      sustain: 0.08,
+      release: 0.2,
+      distortion: 0.48,
+      chorusWet: 0.0,
+      delayTime: 0.24,
+      delayWet: 0.28,
+      reverbDecay: 1.5,
+      reverbWet: 0.12,
+      masterVolume: -4,
+    },
+    bridge: {
+      timbreAndWaveforms: 'Raw single sawtooth wave feeding extreme resonance.',
+      filterAndBrightness: 'Resonance boosted to 12.5 Q with +7800Hz envelope sweep provides the iconic acid squelch.',
+      envelopeAndMotion: 'Punchy 5ms attack and 320ms envelope snap give percussive 16th-note acid rhythm.',
+      spaceAndEffects: '48% saturation distortion accentuates harmonic overtones.',
+    },
+    coachingTip: 'Twist the Cutoff knob while playing a fast 16th-note pattern to experience authentic acid squelch.',
+  },
+  {
+    name: 'Solaris Cryo Choir',
+    category: 'Vocal Formant Pad',
+    prompts: [
+      'Solaris cryo ethereal choir pad with haunting vocal formants and vast cathedral space',
+      'Angelic human vocal choir synth pad with slow breathing dynamics',
+      'Deep cosmic vocal choir evoking frozen celestial starlight',
+    ],
+    patch: {
+      name: 'Solaris Cryo Choir',
+      osc1Type: 'custom',
+      osc1Octave: 0,
+      osc1Detune: -7,
+      osc1Mix: 0.8,
+      osc1Partials: [1.0, 0.2, 0.85, 0.75, 0.1, 0.0, 0.65, 0.45, 0.05, 0.0, 0.15, 0.0, 0.0, 0.0, 0.0, 0.0],
+      osc2Type: 'custom',
+      osc2Octave: 1,
+      osc2Detune: 9,
+      osc2Mix: 0.55,
+      osc2Partials: [0.7, 0.1, 0.6, 0.5, 0.0, 0.0, 0.45, 0.3, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0],
+      filterType: 'bandpass',
+      filterCutoff: 1650,
+      filterResonance: 3.0,
+      filterEnvAmount: 900,
+      lfoRate: 0.35,
+      lfoDepth: 0.5,
+      lfoTarget: 'filter',
+      attack: 0.85,
+      decay: 2.0,
+      sustain: 0.8,
+      release: 2.5,
+      distortion: 0.0,
+      chorusWet: 0.65,
+      delayTime: 0.42,
+      delayWet: 0.35,
+      reverbDecay: 6.8,
+      reverbWet: 0.6,
+      masterVolume: -8,
+    },
+    bridge: {
+      timbreAndWaveforms: 'Fourier partial bumps at harmonics 3-4 and 7-8 model biological vocal tract "ah/oh" formant peaks.',
+      filterAndBrightness: 'Bandpass centered at 1650Hz focuses human vocal frequency presence.',
+      envelopeAndMotion: 'Slow 850ms attack models human respiratory swelling.',
+      spaceAndEffects: 'Cathedral reverb wraps the voices in immense sacred acoustics.',
+    },
+    coachingTip: 'Play open fifths or octaves to allow the vowel formant resonances to float cleanly.',
+  },
 ];
 
-// Variation generators to expand dataset to 500+ diverse pairs
+// Contextual variation templates for multi-turn modifications
 const MODIFIERS = [
   { prefix: 'Make it brighter with airy highs, ', tweak: (p) => ({ ...p, filterCutoff: Math.min(16000, p.filterCutoff * 1.4), filterEnvAmount: p.filterEnvAmount + 800 }) },
   { prefix: 'Make it softer and warmer, reduce harshness, ', tweak: (p) => ({ ...p, filterCutoff: Math.max(300, p.filterCutoff * 0.75), attack: p.attack + 0.04 }) },
@@ -285,7 +423,7 @@ function generateTrainingPairs() {
 
   for (const seed of SEED_ARCHETYPES) {
     for (const prompt of seed.prompts) {
-      // Base prompt
+      // Base creation prompt
       const baseResponse = {
         patchName: seed.patch.name,
         summary: `Tailored a dedicated acoustic architecture for "${prompt}", combining precise harmonic wave sculpting with dynamic filter envelopes.`,
@@ -303,10 +441,11 @@ function generateTrainingPairs() {
 
       trainPairs.push({
         prompt: prompt,
+        currentPatch: {},
         response: baseResponse,
       });
 
-      // Generate incremental variations
+      // Generate incremental delta modifications
       for (const mod of MODIFIERS) {
         const modPrompt = `${mod.prefix}${prompt}`;
         const tweakedPatch = mod.tweak(seed.patch);
@@ -323,19 +462,19 @@ function generateTrainingPairs() {
         };
 
         if (Math.random() < 0.15) {
-          valPairs.push({ prompt: modPrompt, response: modResponse });
+          valPairs.push({ prompt: modPrompt, currentPatch: seed.patch, response: modResponse });
         } else {
-          trainPairs.push({ prompt: modPrompt, response: modResponse });
+          trainPairs.push({ prompt: modPrompt, currentPatch: seed.patch, response: modResponse });
         }
       }
     }
   }
 
   // Multiply and diversify with synthetic musical requests
-  const GENRE_STYLES = ['80s Synthpop', 'Neo-Soul Keys', 'Cyberpunk Dystopia', 'Vaporwave Mall', 'Anime OST Piano', 'Dark Ambient'];
-  const EMOTIONS = ['solitude and release', 'luxurious nostalgia', 'first dawn sunlight', 'rainy neon reflection', 'infinite cosmic voyage', 'vintage dusty cassette'];
+  const GENRE_STYLES = ['80s Synthpop', 'Neo-Soul Keys', 'Cyberpunk Dystopia', 'Vaporwave Mall', 'Anime OST Piano', 'Dark Ambient', 'French Touch Filter House', 'Nordic Folk Ambient'];
+  const EMOTIONS = ['solitude and release', 'luxurious nostalgia', 'first dawn sunlight', 'rainy neon reflection', 'infinite cosmic voyage', 'vintage dusty cassette', 'golden hour warmth'];
 
-  for (let i = 0; i < 400; i++) {
+  for (let i = 0; i < 500; i++) {
     const genre = GENRE_STYLES[i % GENRE_STYLES.length];
     const emotion = EMOTIONS[i % EMOTIONS.length];
     const baseSeed = SEED_ARCHETYPES[i % SEED_ARCHETYPES.length];
@@ -361,7 +500,11 @@ function generateTrainingPairs() {
       coachingTip: baseSeed.coachingTip,
     };
 
-    trainPairs.push({ prompt: promptText, response: resp });
+    if (i % 8 === 0) {
+      valPairs.push({ prompt: promptText, currentPatch: {}, response: resp });
+    } else {
+      trainPairs.push({ prompt: promptText, currentPatch: {}, response: resp });
+    }
   }
 
   return { trainPairs, valPairs };
@@ -371,14 +514,14 @@ console.log('⚡ Generating SynthLM fine-tuning datasets...');
 const { trainPairs, valPairs } = generateTrainingPairs();
 
 // 1. Export Nebius Token Factory / NVIDIA OpenAI-compatible JSONL format
-const SYSTEM_PROMPT = `You are the Master Sound Designer for SynthLM. You transform natural language poetic metaphors and technical requests into precise 20-parameter synthesizer patches, 16-order Fourier harmonic series, and acoustic explanations. Respond strictly with a JSON object.`;
+const SYSTEM_PROMPT = `You are the Master Sound Designer for SynthLM. You transform natural language poetic metaphors and technical requests into precise 22-parameter synthesizer patches, 16-order Fourier harmonic series, and acoustic explanations. Respond strictly with a JSON object.`;
 
 function toNebiusChatJsonl(pairs) {
   return pairs
     .map((item) => {
       const messages = [
         { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: `USER REQUEST: "${item.prompt}"\nCURRENT PATCH STATE: {}` },
+        { role: 'user', content: `USER REQUEST: "${item.prompt}"\nCURRENT PATCH STATE: ${JSON.stringify(item.currentPatch || {})}` },
         { role: 'assistant', content: JSON.stringify(item.response) },
       ];
       return JSON.stringify({ messages });
@@ -395,7 +538,7 @@ fs.writeFileSync(nebiusValPath, toNebiusChatJsonl(valPairs), 'utf-8');
 // 2. Export Google Gemini AI Studio Fine-Tuning JSON format
 const geminiTrainPath = path.join(DATASET_DIR, 'gemini_sft_train.json');
 const geminiData = trainPairs.map((item) => ({
-  text_input: `USER REQUEST: "${item.prompt}"\nCURRENT PATCH STATE: {}`,
+  text_input: `USER REQUEST: "${item.prompt}"\nCURRENT PATCH STATE: ${JSON.stringify(item.currentPatch || {})}`,
   output: JSON.stringify(item.response),
 }));
 fs.writeFileSync(geminiTrainPath, JSON.stringify(geminiData, null, 2), 'utf-8');
@@ -404,4 +547,3 @@ console.log(`✅ Success! Generated fine-tuning datasets:`);
 console.log(`- Nebius Token Factory Train: ${nebiusTrainPath} (${trainPairs.length} samples)`);
 console.log(`- Nebius Token Factory Val:   ${nebiusValPath} (${valPairs.length} samples)`);
 console.log(`- Google Gemini Train:       ${geminiTrainPath} (${geminiData.length} samples)`);
-
