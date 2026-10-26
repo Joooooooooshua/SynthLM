@@ -1,6 +1,10 @@
 {
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" }
-  ]
+  ],
+  "functions": {
+    "api/sound-design.ts": {
+      "maxDuration": 30
+    }
+  }
 }
-
